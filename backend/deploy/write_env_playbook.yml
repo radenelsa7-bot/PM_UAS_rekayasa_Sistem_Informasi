@@ -1,0 +1,49 @@
+- name: Upload .env and reload services
+  hosts: all
+  become: yes
+  vars:
+    src_env_file: ".env.production"    # local file to copy (override with -e)
+    deploy_path: "/var/www/app"         # remote app path (override with -e)
+    deploy_user: "www-data"
+
+  tasks:
+    - name: Check local env file exists
+      local_action: stat path={{ src_env_file }}
+      register: local_env
+
+    - name: Fail if local env file missing
+      local_action: fail msg="Local env file {{ src_env_file }} not found"
+      when: not local_env.stat.exists
+
+    - name: Upload .env to remote deploy path
+      copy:
+        src: "{{ src_env_file }}"
+        dest: "{{ deploy_path }}/.env"
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_user }}"
+        mode: "0640"
+
+    - name: Ensure composer dependencies are present (optional)
+      command: composer install --no-dev --optimize-autoloader
+      args:
+        chdir: "{{ deploy_path }}"
+
+    - name: Run migrations (optional)
+      command: php artisan migrate --force
+      args:
+        chdir: "{{ deploy_path }}"
+      when: false
+
+    - name: Restart php-fpm if service exists
+      service:
+        name: php-fpm
+        state: restarted
+      ignore_errors: yes
+
+    - name: Restart queue worker via systemd (if present)
+      service:
+        name: laravel-queue
+        state: restarted
+      ignore_errors: yes
+
+  handlers: []

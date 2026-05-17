@@ -1,0 +1,16 @@
+[Unit]
+Description=Laravel Queue Worker
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+Restart=always
+RestartSec=3
+ExecStart=/usr/bin/php /var/www/tukangdekat/backend/artisan queue:work --sleep=3 --tries=3 --queue=default
+SyslogIdentifier=laravel-queue
+Environment=APP_ENV=production
+Environment=QUEUE_CONNECTION=database
+
+[Install]
+WantedBy=multi-user.target

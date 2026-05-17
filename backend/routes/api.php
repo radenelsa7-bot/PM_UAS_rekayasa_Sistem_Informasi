@@ -1,0 +1,74 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\CatalogController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\TreasurerController;
+use App\Http\Controllers\Api\ReviewController;
+
+// Public routes (authentication)
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+});
+
+// Catalog routes (public)
+Route::prefix('catalog')->group(function () {
+    Route::get('/categories', [CatalogController::class, 'getCategories']);
+    Route::get('/categories/{categoryId}/providers', [CatalogController::class, 'getProvidersByCategory']);
+    Route::get('/providers/search', [CatalogController::class, 'searchProviders']);
+    Route::get('/providers/{providerId}', [CatalogController::class, 'getProviderDetail']);
+});
+
+// Protected routes (require authentication)
+Route::middleware('auth:sanctum')->group(function () {
+    // Auth
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+    // Order
+    Route::prefix('orders')->group(function () {
+        Route::post('/', [OrderController::class, 'createOrder']);
+        Route::get('/my-orders', [OrderController::class, 'getMyOrders']);
+        Route::get('/{orderId}', [OrderController::class, 'getOrder']);
+        Route::post('/{orderId}/respond', [OrderController::class, 'respondToOrder']);
+        Route::post('/{orderId}/start-work', [OrderController::class, 'startWork']);
+        Route::post('/{orderId}/complete', [OrderController::class, 'completeOrder']);
+    });
+
+    // Payment
+    Route::prefix('payments')->group(function () {
+        Route::get('/order/{orderId}', [PaymentController::class, 'getPayments']);
+        Route::get('/{paymentId}', [PaymentController::class, 'getPaymentStatus']);
+        Route::post('/{paymentId}/generate-qris', [PaymentController::class, 'generateQRIS']);
+    });
+
+    // Review
+    Route::prefix('reviews')->group(function () {
+        Route::post('/order/{orderId}', [ReviewController::class, 'createReview']);
+        Route::get('/provider/{providerId}', [ReviewController::class, 'getProviderReviews']);
+        Route::get('/order/{orderId}', [ReviewController::class, 'getOrderReview']);
+    });
+
+    // Admin
+    Route::prefix('admin')->group(function () {
+        Route::get('/providers/pending', [AdminController::class, 'getPendingProviders']);
+        Route::patch('/providers/{providerId}/verification', [AdminController::class, 'updateVerification']);
+    });
+
+    // Treasurer (API for web requests)
+    Route::prefix('treasurer')->group(function () {
+        Route::get('/payments/report', [TreasurerController::class, 'paymentReport']);
+    });
+});
+
+// Webhook routes (tanpa authentication)
+Route::post('/webhooks/payment', [PaymentController::class, 'webhookPaymentCallback']);
+
+// Fallback untuk testing
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
