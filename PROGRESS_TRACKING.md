@@ -17,6 +17,7 @@ Dokumen ini mencatat progres backend dan frontend dalam satu tempat, supaya muda
 - Menjalankan full PHPUnit test suite, semua lulus.
 - Merilis tag `v1.0.0` dan memperbarui draft release menjadi release publik.
 - Commit dan push perubahan ke `main` sudah dilakukan.
+ - Integration tests for network failures and backoff: branch `feature/backend-121-integration-backoff` (completed)
 
 ### Frontend
 - Status frontend utama masih fokus pada tracking branch dan pemetaan issue.
