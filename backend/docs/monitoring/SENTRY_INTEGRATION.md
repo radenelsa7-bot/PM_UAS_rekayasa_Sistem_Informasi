@@ -1,3 +1,84 @@
+Integrasi Sentry (Panduan Singkat)
+=================================
+
+Dokumen ini menjelaskan langkah minimal untuk mengaktifkan pelaporan error ke Sentry pada backend Laravel.
+
+Langkah-langkah:
+
+1) Tambahkan variabel lingkungan di sistem deployment (staging/production):
+
+   - `SENTRY_LARAVEL_DSN` (JANGAN commit DSN ke repo)
+   - `SENTRY_TRACES_SAMPLE_RATE` (opsional, contoh `0.0` untuk non-sampling)
+
+2) Pasang paket Sentry di folder `backend`:
+
+   ```bash
+   cd backend
+   composer require sentry/sentry-laravel
+   ```
+
+   - Setelah ini, commit perubahan `composer.json` dan `composer.lock` agar pipeline/deploy meng-install dependensi yang benar.
+
+3) Publikasikan konfigurasi (opsional, disarankan):
+
+   ```bash
+   php artisan vendor:publish --provider="Sentry\\Laravel\\ServiceProvider"
+   ```
+
+   - Ini akan menambahkan `config/sentry.php` untuk mengatur opsi SDK.
+
+4) Contoh pengaturan `.env` minimal:
+
+   SENTRY_LARAVEL_DSN=${SENTRY_DSN}
+   SENTRY_TRACES_SAMPLE_RATE=0.0
+
+   (Opsional) tambahkan:
+   SENTRY_ENVIRONMENT=production
+   SENTRY_RELEASE=${GIT_COMMIT_SHA}
+
+5) Integrasi di Exception Handler (direkomendasikan)
+
+   Di `app/Exceptions/Handler.php`, tambahkan pemanggilan Sentry pada method `report()` agar exception dikirim ke Sentry jika DSN tersedia. Contoh:
+
+   ```php
+   <?php
+   namespace App\\Exceptions;
+
+   use Throwable;
+   use Illuminate\\Foundation\\Exceptions\\Handler as ExceptionHandler;
+
+   class Handler extends ExceptionHandler
+   {
+       public function report(Throwable $exception)
+       {
+           if (app()->bound('sentry') && env('SENTRY_LARAVEL_DSN')) {
+               app('sentry')->captureException($exception);
+           }
+
+           parent::report($exception);
+       }
+   }
+   ```
+
+6) Logging channel (opsional)
+
+   Anda dapat menambah channel `sentry` di `config/logging.php` dan mengarahkan level `error`/`critical` ke sana.
+
+7) Verifikasi
+
+   Di staging, verifikasi dengan memicu exception atau lewat Tinker:
+
+   ```php
+   app('sentry')->captureMessage('test');
+   ```
+
+Catatan Penting
+- Jangan menyimpan DSN/secret di repo. Gunakan secret manager atau GitHub Actions secrets.
+- Pastikan CI/deploy menjalankan `composer install` dan `composer.lock` sudah di-commit.
+
+CI / Deploy (ringkasan)
+- Commit `composer.json` + `composer.lock` setelah menambah paket.
+- Pastikan pipeline menyuntikkan `SENTRY_LARAVEL_DSN` dari secrets dan menjalankan `composer install`.
 Sentry integration (scaffold)
 =============================
 
