@@ -37,7 +37,21 @@ php artisan payouts:process
 php artisan payouts:process-pending --limit=25
 ```
 
-6) Monitoring
+6) Smoke test
+
+Run the deploy smoke test script after deploy and worker restart:
+
+```bash
+./deploy/smoke-test.sh
+```
+
+Or run the Laravel command directly:
+
+```bash
+php artisan deploy:smoke --url="http://127.0.0.1"
+```
+
+7) Monitoring
 - `php artisan payouts:alert --since=60` and `php artisan payouts:export-failed --since=60 --email=ops@example.com`
 
 Notes

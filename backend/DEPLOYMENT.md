@@ -42,6 +42,9 @@ php artisan db:seed --class=AdminSeeder --force   # if you have seeders to creat
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+./deploy/smoke-test.sh
+# or alternatively run the Laravel smoke test command:
+# php artisan deploy:smoke --url="http://127.0.0.1"
 ```
 
 ## Scheduler (cron)
