@@ -32,9 +32,7 @@ class HomePage extends ConsumerWidget {
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
           title: const Text('TukangDekat'),
-          backgroundColor: Theme.of(context).colorScheme.surface,
           bottom: TabBar(tabs: tabs),
-          elevation: 0,
           actions: [
             IconButton(
               tooltip: 'Logout',
@@ -50,7 +48,9 @@ class HomePage extends ConsumerWidget {
             ),
           ],
         ),
-        body: TabBarView(children: pages),
+        body: TabBarView(
+          children: pages,
+        ),
       ),
     );
   }
@@ -62,7 +62,10 @@ class HomePage extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 16),
-          Text('Profil Akun', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Profil Akun',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 16),
           Card(
             child: Padding(
