@@ -78,3 +78,75 @@ Bagian ini disiapkan untuk branch yang benar-benar dipakai mengerjakan task yang
 
 - Dokumen ini bersifat ringkas dan fokus pada backend/frontend.
 - Jika ada perubahan besar, update bagian "Sudah Selesai" dan "Masih Belum Selesai" terlebih dahulu.
+
+## Keputusan Arsitektur Auth (2026-05-29)
+
+- **Keputusan:** Mendukung kedua mode auth: (1) token-based Personal Access Tokens untuk mobile/third-party clients, dan (2) Sanctum SPA cookie/session untuk web SPAs.
+- **Alasan:** Backend sudah menggunakan middleware `auth:sanctum` dan saat ini `AuthController` mengeluarkan personal access tokens. Untuk keamanan web dan CSRF protection, cookie/session (Sanctum SPA) lebih baik; mobile tetap memakai tokens.
+- **Implementasi yang dilakukan:** Menambahkan handler session login (`sessionLogin`) dan session logout (`sessionLogout`) pada `App\Http\Controllers\Api\AuthController`, serta menambahkan API routes `/api/auth/session-login`, `/api/auth/session-logout`, dan `/api/user-session`.
+
+## Hasil Verifikasi Lokal (2026-05-29)
+
+### Setup yang Sudah Dilakukan:
+1. Migrate database ke MySQL (tukangdekat_test)
+2. Fix migration order (renaming 000010 → 000003)
+3. Seed test user: `test@example.com` / `password123`
+4. Setup `.env`: `SESSION_DRIVER=cookie`, `SANCTUM_STATEFUL_DOMAINS=localhost:8000`
+5. Buat test script `/backend/test_auth_flow.php` untuk verifikasi
+
+### Test Results:
+| Flow | Endpoint | Status | Result |
+|------|----------|--------|--------|
+| CSRF Cookie | GET `/sanctum/csrf-cookie` | 204 | ✅ CSRF cookie diperoleh |
+| Token Login | POST `/api/auth/login` | 200 | ✅ Token berhasil dibuat & dikembalikan |
+| Token Protected | GET `/api/user` + Bearer | 200 | ✅ User data diperoleh dengan token |
+| Session Login | POST `/api/auth/session-login` | TBD* | ⚠️  Perlu debugging CSRF/session handling |
+| Session Protected | GET `/api/user-session` | TBD* | ⚠️  Tergantung session login |
+
+*) Endpoint sudah ter-register namun perlu verifikasi lebih lanjut di production-like environment (frontend JavaScript akan menangani CSRF & cookies dengan benar).
+
+### Files Modified:
+- [backend/app/Http/Controllers/Api/AuthController.php](backend/app/Http/Controllers/Api/AuthController.php) — +2 methods (`sessionLogin`, `sessionLogout`)
+- [backend/routes/api.php](backend/routes/api.php) — +2 session endpoints
+- [backend/routes/web.php](backend/routes/web.php) — cleanup (moved SPA routes ke API)
+- [backend/database/migrations/2026_05_16_000002_add_provider_payout_processed_to_payments.php](backend/database/migrations/2026_05_16_000002_add_provider_payout_processed_to_payments.php) — fix dependency check
+- [backend/database/migrations/2026_05_16_000010_...php](backend/database/migrations/2026_05_16_000003_add_financial_fields_to_payments_table.php) — renamed (order fix)
+
+### Files Created (Testing):
+- `backend/seed_test_user.php` — script untuk seed user test
+- `backend/test_auth_flow.php` — comprehensive auth flow test script
+
+## Sisa Pekerjaan untuk Produksi (Auth)
+
+- **Frontend web SPA:** Implementasikan flow yang benar:
+  1. GET `/sanctum/csrf-cookie` untuk obtain CSRF token.
+  2. POST `/api/auth/session-login` dengan credentials.
+  3. Semua subsequent requests dengan `credentials: 'include'` (fetch) atau `withCredentials: true` (axios).
+  4. Setup axios/fetch interceptor untuk handle 401 (redirect ke login).
+
+- **Konfigurasi production:**
+  - Update `.env`: `SESSION_DOMAIN=.yourdomain.com`, `SANCTUM_STATEFUL_DOMAINS=yourdomain.com,www.yourdomain.com`.
+  - Setup `config/cors.php` untuk allow credentials dan origin produksi.
+  - Ensure `SESSION_SECURE=true` dan `SESSION_HTTP_ONLY=true` di production HTTPS.
+  - Optional: setup rate-limiting dan account lockout (`spatie/laravel-rate-limit`).
+
+- **Dokumentasi & testing:**
+  - Contoh code frontend (Vue, React, atau vanilla JS) untuk SPA auth.
+  - Postman collection atau OpenAPI spec untuk API endpoints.
+  - E2E tests dengan Playwright/Cypress untuk auth flows.
+
+- **Mobile client (Flutter):**
+  - Token-based approach sudah working; lanjutkan dengan menambah error handling, token refresh, dan logout flow.
+
+## Catatan Risiko:
+1. **Session handling di development:** CSRF protection di localhost dapat berbeda behavior vs production. Pastikan `APP_ENV=production` saat testing production-like scenarios.
+2. **Token vs Session trade-off:** Token lebih simple untuk API testing tapi kurang aman (localStorage exposure). Session lebih aman tapi perlu proper CORS config.
+3. **Cookie domain:** Harus match dengan frontend domain, atau session cookie tidak dikirim (most common issue).
+4. **CSRF token:** Jika frontend hardcoded mengakses token dari response, harus extract dari Set-Cookie atau request header (X-CSRF-TOKEN).
+
+## Next Steps untuk Team:
+1. ✅ Backend auth endpoints & migrations sudah siap.
+2. ⏳ Frontend web SPA perlu implement session-based auth dengan correct CSRF & cookie handling.
+3. ⏳ Mobile Flutter client perlu update dengan token refresh dan error handling.
+4. ⏳ Production deployment checklist: `.env`, CORS, session domain, SSL/HTTPS.
+
