@@ -43,6 +43,33 @@ Dokumen ini mencatat progres backend dan frontend dalam satu tempat, supaya muda
 - UI payout-alerts, build/tests frontend, dan update integrasi masih menjadi area verifikasi manual bila frontend lanjut dikerjakan.
 - Tidak ada blocker baru dari sisi backend untuk melanjutkan task frontend.
 
+### Hasil Cek Website Hari Ini
+- Website lokal bisa dijalankan dan root page sudah tampil di `http://127.0.0.1:8000/`.
+- Halaman yang muncul masih welcome default Laravel, jadi web UI utama belum menggantikan starter page.
+- Route `/login` dan `/register` masih redirect ke root, jadi alur auth web belum menjadi halaman mandiri.
+- Route admin/treasurer sudah tersedia di backend, tetapi masih diproteksi auth dan belum bisa dipakai sebagai UI publik tanpa login.
+- View yang benar-benar ada saat ini hanya `welcome` dan halaman bendahara/payout di area admin; belum terlihat view web app utama untuk customer/provider.
+- Halaman bendahara yang sudah tersedia mencakup report, provider payouts, dan payout detail, sehingga sisi operasional keuangan sudah punya UI internal.
+- Fokus lanjut untuk tim web: bangun halaman web utama, rapikan flow login/register, lalu verifikasi halaman admin setelah auth tersedia.
+
+## Auth Integration (dev-testing)
+
+- Endpoint API yang tersedia untuk pengujian:
+	- `POST /api/auth/register` — mendaftar pengguna baru (diperlukan: `name`, `email`, `phone`, `password`, `role`).
+	- `POST /api/auth/login` — mendapatkan token (Sanctum personal access token) pada respon `token`.
+	- `POST /api/auth/logout` — mencabut token saat sudah login (memerlukan header `Authorization: Bearer <token>`).
+	- `GET /api/user` — endpoint proteksi `auth:sanctum` yang mengembalikan data pengguna saat ini.
+
+- Implementasi dev-UI saat ini:
+	- `backend/resources/views/auth/register.blade.php` — form dev untuk mendaftar; sudah ditambahkan field `phone` agar validasi backend terpenuhi.
+	- `backend/resources/views/auth/login.blade.php` — form dev untuk login; menyimpan token ke `localStorage` (`td_token`) setelah berhasil.
+	- `backend/resources/views/app/dashboard.blade.php` — memanggil `/api/user` menggunakan token dari `localStorage` dan menampilkan JSON user; juga menambahkan tombol `Logout` yang memanggil `/api/auth/logout` lalu menghapus token dan redirect ke login.
+
+- Rekomendasi lanjutan:
+	- Untuk produksi, gunakan cookie-based auth (Sanctum SPA) atau server-side sessions agar CSRF dan cookie management benar, bukan menyimpan token di `localStorage`.
+	- Tambahkan validasi CSRF pada form yang memakai cookie/session, atau gunakan `sanctum` SPA flow (`/sanctum/csrf-cookie`) untuk alur single-page apps.
+	- Integrasikan UI yang dibuat ke aplikasi frontend utama (Vue/React/Blade) dan lakukan end-to-end test untuk alur pendaftaran, login, dan akses halaman proteksi.
+
 ### Kesimpulan
 - Progress tracking sudah selaras dengan script setup.
 - Daftar assignee dan branch tracking sudah konsisten.
