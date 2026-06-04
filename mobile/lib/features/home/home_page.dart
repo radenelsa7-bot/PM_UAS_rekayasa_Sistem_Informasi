@@ -56,6 +56,7 @@ class HomePage extends ConsumerWidget {
   }
 
   Widget _buildAccountTab(BuildContext context, dynamic state) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -64,22 +65,80 @@ class HomePage extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             'Profil Akun',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(color: colorScheme.primary),
           ),
-          const SizedBox(height: 16),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Email: ${state.userEmail ?? 'N/A'}'),
-                  const SizedBox(height: 8),
-                  Text('Role: ${state.userRole ?? 'N/A'}'),
-                  const SizedBox(height: 8),
-                  Text('ID: ${state.userId ?? 'N/A'}'),
-                ],
-              ),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.primary.withOpacity(0.08),
+                  blurRadius: 18,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  state.userEmail ?? 'N/A',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _buildInfoBadge(
+                      label: 'Role',
+                      value: state.userRole ?? 'N/A',
+                      color: colorScheme.secondary,
+                    ),
+                    const SizedBox(width: 10),
+                    _buildInfoBadge(
+                      label: 'ID',
+                      value: state.userId?.toString() ?? 'N/A',
+                      color: colorScheme.primary,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoBadge({
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
           ),
         ],
