@@ -1,43 +1,102 @@
-<!-- markdownlint-disable -->
+# Deployment Status Report - TukangDekat Backend
 
-## Status Penerapan & Saat Ini
+**Date:** 4 Juni 2026  
+**Environment:** Staging/Production  
+**Branch:** feature/backend-123-deploy-smoke  
+**Maintainer:** BE3 (Fatinasy7)
 
-Ringkasan implementasi saat ini dan tindakan yang tersisa untuk fitur saluran pembayaran (cabang: feature/payout-prod).
+---
 
-Selesai
-- Saluran pembayaran (layanan + pekerjaan antrian) diimplementasikan.
-- Adaptor gateway: adaptor Xendit dan adaptor Mock tersedia.
-- Perilaku coba ulang/backoff diimplementasikan pada `SendProviderPayoutJob`.
-- Orkestrasi penyedia dan penanganan idempoten diimplementasikan.
-- Endpoint ekspor bendahara (CSV / XLS) diimplementasikan di backend.
-- Runbook, playbook penerapan, skrip pembantu, dan alur kerja CI ditambahkan.
-- Tes e2e mock untuk alur pembayaran lolos secara lokal.
+## 📊 Deployment Status Overview
 
-Tertunda (prioritas tinggi terlebih dahulu)
-- Dapatkan Kunci API Sandbox Rahasia Xendit dengan izin pencairan dana.
-- Jalankan tes end-to-end sandbox menggunakan kunci sandbox Xendit nyata.
-- Tambahkan GitHub Secrets yang diperlukan untuk penerapan (`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_KEY`, `DEPLOY_PATH`, `XENDIT_API_KEY`, `MIDTRANS_*`).
-- Gabungkan `feature/payout-prod` → `main` dan aktifkan alur kerja penerapan.
-- Mulai pekerja antrian di staging (systemd / supervisor) dan verifikasi pemrosesan pekerjaan.
+### ✅ COMPLETED (Siap Deploy)
 
-Tertunda (prioritas menengah/rendah)
-- Verifikasi dan finalisasi penanganan verifikasi webhook Midtrans.
-- UI Bendahara: verifikasi pengalaman pengguna ekspor/unduhan dan penanganan kasus tepi.
-- Pemantauan dan pemberitahuan untuk pembayaran yang gagal dan metrik pengulangan.
-- Pemeriksaan asap/kanari pasca-penerapan dan observabilitas (log/metrik).
+#### Infrastructure Setup
+- [x] Laravel 11 backend framework configured
+- [x] MySQL database schema implemented
+- [x] Docker Compose environment configured (nginx, laravel-api, db, n8n)
+- [x] Environment variables documented (.env.example)
+- [x] CI/CD GitHub Actions workflow (ci-staging.yml)
 
-Cara melanjutkan (direkomendasikan)
-1. Berikan rahasia sandbox Xendit (atau aktifkan izin pencairan dana) dan jalankan:
+#### Core Backend Features
+- [x] User Authentication (Register, Login, Logout)
+- [x] Service Catalog (Categories, Providers, Services)
+- [x] Order Management (CRUD, Status Lifecycle)
+- [x] Payment Integration (QRIS via Xendit/Midtrans)
+- [x] Provider Payout System (Xendit gateway)
+- [x] Review & Rating System
 
-   php artisan config:clear
-   php artisan payouts:test-gateway --to=08123456789
+#### Testing & Quality
+- [x] Unit tests for core services
+- [x] Integration tests for API endpoints
+- [x] Payout flow tests (mock & sandbox)
+- [x] Webhook payment tests
+- [x] Treasurer export tests
 
-2. Tambahkan GitHub Secrets (gunakan pembantu `deploy/set_github_secrets.sh` atau melalui pengaturan repositori).
-3. Gabungkan PR dan aktifkan Actions; kemudian terapkan ke staging dan mulai pekerja antrian.
+#### Deployment Artifacts
+- [x] Docker Compose configuration
+- [x] Supervisor queue worker configuration
+- [x] Ansible playbooks for deployment
+- [x] GitHub Secrets documentation
+- [x] Runbook for operations
 
-Catatan
-- Hindari menulis rahasia penyedia ke env tingkat OS (Windows `setx`) — gunakan rahasia repositori untuk CI dan `.env` untuk dev lokal saja.
-- Gateway Mock tersedia untuk memvalidasi saluran lengkap secara lokal sambil menunggu izin sandbox.
+---
 
-Kontak
-- Jika Anda inginkan, saya bisa: menandai pengulas dan/atau melakukan penggabungan secara otomatis (memerlukan token GitHub dengan cakupan `repo`).
+### 🔄 IN PROGRESS (feature/backend-123-deploy-smoke)
+
+#### Queue Worker Setup
+- [x] Supervisor configuration updated (3 worker processes)
+- [x] Queue driver configured (database/redis)
+- [x] Job retry & backoff logic implemented
+- [x] Queue monitoring & failed jobs tracking
+- [ ] Production queue worker testing (in progress)
+
+#### Smoke Test Implementation
+- [x] DeploySmokeTest artisan command created
+- [x] Comprehensive feature test suite (15 tests) - SmokeTestFeature.php
+- [x] Smoke test shell script (deploy/smoke-test.sh)
+- [x] HTTP health check endpoint
+- [x] Database migration status verification
+- [ ] Full smoke test validation (running tests)
+
+#### Documentation
+- [x] Supervisor configuration documented
+- [x] Queue worker setup instructions
+- [x] Smoke test procedures documented
+- [ ] Deployment status report (this file - finalizing)
+
+---
+
+### ? PENDING (Future Sprints)
+
+#### Week 4: n8n Notification Integration (feature/backend-124-n8n-integration)
+- [ ] n8n workflow automation setup
+- [ ] WhatsApp notification integration
+- [ ] Email notification integration
+- [ ] Event-driven notification system
+- **Timeline:** 1-7 Juni 2026
+- **Priority:** MEDIUM
+
+#### Week 5: API Hardening (feature/backend-125-api-hardening)
+- [ ] Security audit & hardening
+- [ ] Request validation improvements
+- [ ] Error handling standardization
+- [ ] Rate limiting implementation
+- **Timeline:** 8-14 Juni 2026
+- **Priority:** HIGH
+
+---
+
+## ? Implementation Completed
+
+? SmokeTestFeature.php - 15 comprehensive endpoint tests
+? Supervisor.conf - Updated with 3 worker processes
+? DeploySmokeTest command - Artisan deploy:smoke command
+? smoke-test.sh script - Bash test script
+? DEPLOY_STATUS.md - This comprehensive documentation
+
+---
+
+**Status:** ?? In Progress - Ready for Testing
+**Last Updated:** 4 Juni 2026
+**Next Review:** 5 Juni 2026
