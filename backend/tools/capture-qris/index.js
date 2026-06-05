@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
-const { chromium } = require('playwright-core');
+const { chromium } = require('playwright');
+
 const yargs = require('yargs');
 const fetch = require('node-fetch');
 
 const argv = yargs
   .option('url', { type: 'string', demandOption: true })
-  .option('timeout', { type: 'number', default: 15000 })
+  .option('timeout', { type: 'number', default: 30000 })
   .help()
   .argv;
 
@@ -24,8 +25,12 @@ const argv = yargs
       console.warn('PLAYWRIGHT_EXECUTABLE_PATH not set — attempting to launch bundled Chromium may fail.');
     }
     const browser = await chromium.launch(launchOptions);
-    const page = await browser.newPage();
-    await page.goto(url, { waitUntil: 'networkidle2', timeout });
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 720 },
+    });
+    const page = await context.newPage();
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout });
+
 
     // Try to find the largest image on the page (likely the QR)
     const imgSrc = await page.evaluate(() => {
