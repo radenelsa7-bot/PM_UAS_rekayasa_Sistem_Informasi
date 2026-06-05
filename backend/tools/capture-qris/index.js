@@ -25,7 +25,6 @@ const argv = yargs
     }
     const browser = await chromium.launch(launchOptions);
     const page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 800 });
     await page.goto(url, { waitUntil: 'networkidle2', timeout });
 
     // Try to find the largest image on the page (likely the QR)
@@ -86,16 +85,16 @@ const argv = yargs
       if (elHandle) {
         const clip = await elHandle.boundingBox();
         if (clip && clip.width > 0 && clip.height > 0) {
-          const screenshot = await page.screenshot({ clip, encoding: 'base64' });
-          dataUrl = `data:image/png;base64,${screenshot}`;
+          const screenshot = await page.screenshot({ clip });
+          dataUrl = `data:image/png;base64,${screenshot.toString('base64')}`;
         }
       }
     }
 
     // Last resort: full page screenshot
     if (!dataUrl) {
-      const screenshot = await page.screenshot({ fullPage: false, encoding: 'base64' });
-      dataUrl = `data:image/png;base64,${screenshot}`;
+      const screenshot = await page.screenshot();
+      dataUrl = `data:image/png;base64,${screenshot.toString('base64')}`;
     }
 
     await browser.close();
