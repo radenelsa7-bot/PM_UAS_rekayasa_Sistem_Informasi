@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use App\Models\Payment;
 use App\Services\PaymentGatewayService;
 use App\Services\PaymentFinanceService;
 use App\Services\N8nNotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class PaymentController extends Controller
@@ -17,15 +19,45 @@ class PaymentController extends Controller
     private readonly PaymentFinanceService $paymentFinanceService,
   ) {}
 
+  private function authorizePaymentAccess(Payment $payment): bool
+  {
+    $user = Auth::user();
+    $order = $payment->order;
+
+    if (!$order || !$user) {
+      return false;
+    }
+
+    return ($user->role === 'CUSTOMER' && $order->customer_id === $user->id)
+      || ($user->role === 'PROVIDER' && $order->provider_id === $user->id);
+  }
+
   /**
    * Get payment untuk order
    */
   public function getPayments($orderId)
   {
-    $payments = Payment::where('order_id', $orderId)->get();
+    $user = Auth::user();
+    $order = Order::with('payments')->find($orderId);
+
+    if (!$order) {
+      return response()->json(['message' => 'order not found'], 404);
+    }
+
+    if (!$user || !in_array($user->role, ['CUSTOMER', 'PROVIDER'], true)) {
+      return response()->json(['message' => 'unauthorized'], 403);
+    }
+
+    if ($user->role === 'CUSTOMER' && $order->customer_id !== $user->id) {
+      return response()->json(['message' => 'unauthorized'], 403);
+    }
+
+    if ($user->role === 'PROVIDER' && $order->provider_id !== $user->id) {
+      return response()->json(['message' => 'unauthorized'], 403);
+    }
 
     return response()->json([
-      'data' => $payments,
+      'data' => $order->payments,
     ], 200);
   }
 
@@ -40,6 +72,10 @@ class PaymentController extends Controller
       return response()->json([
         'message' => 'payment not found',
       ], 404);
+    }
+
+    if (!$this->authorizePaymentAccess($payment)) {
+      return response()->json(['message' => 'unauthorized'], 403);
     }
 
     $qrisData = $this->paymentGatewayService->generateQrisPayload($payment);
@@ -136,6 +172,10 @@ class PaymentController extends Controller
       ], 404);
     }
 
+    if (!$this->authorizePaymentAccess($payment)) {
+      return response()->json(['message' => 'unauthorized'], 403);
+    }
+
     return response()->json([
       'data' => $payment,
     ], 200);
@@ -150,6 +190,10 @@ class PaymentController extends Controller
 
     if (!$payment) {
       return response()->json(['message' => 'payment not found'], 404);
+    }
+
+    if (!$this->authorizePaymentAccess($payment)) {
+      return response()->json(['message' => 'unauthorized'], 403);
     }
 
     $checkoutUrl = $payment->checkout_url;
