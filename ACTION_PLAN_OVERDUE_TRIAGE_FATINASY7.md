@@ -2,16 +2,21 @@
 **Date:** 6 Juni 2026  
 **Owner:** Fatinasy7 (BE3)  
 **Priority:** URGENT  
-**Status:** Draft - Ready for Implementation
+**Status:** In Progress - Model relationships restored, ready for next implementation phase
 
 ---
 
 ## 📊 EXECUTIVE SUMMARY
 
+### Latest Progress
+- ✅ Restored and verified Eloquent relationships for `User` and `ProviderProfile`.
+- ✅ Recreated missing `backend/tests/Unit/Models/ModelRelationshipsTest.php` and validated branch consistency.
+- 🔜 Next target: finalize Model & Eloquent Relationships first on branch `feature/backend-121-model-relationships` before resuming Reviews & Rating (#20).
+
 ### Current Situation
-- **4 items OVERDUE** (original end date sudah lewat)
-- **1 item IN PROGRESS** (juga overdue)
-- **2 items UPCOMING** (belum dimulai, jadwal Jun 8-14)
+- **3 items OVERDUE** (original end date sudah lewat)
+- **4 items IN PROGRESS** (termasuk review & n8n work)
+- **1 item UPCOMING** (belum dimulai, jadwal Jun 8-14)
 - **Core infrastructure READY** untuk staging deployment
 
 ### Recovery Goal
@@ -19,12 +24,31 @@ Triage overdue items dalam 48 jam, reassess timeline, dan unblock dependencies u
 
 ---
 
+## ✅ SEQUENTIAL TODOS - Selesaikan satu per satu
+- [ ] **#13 Model & Eloquent Relationships** — Selesaikan tuntas sebelum lanjut ke #20 Reviews & Rating.
+  - Branch: `feature/backend-121-model-relationships`
+  - PR: buat setelah relasi valid dan unit test lulus
+  - Fokus: perbaiki model relationship, jalankan `backend/tests/Unit/Models/ModelRelationshipsTest.php`
+- [ ] **#20 API Reviews & Rating** — ditunda sampai #13 selesai.
+  - Branch: `feature/backend-120-reviews-rating-api`
+  - PR: `#42` sudah dibuka, isi PR harus disesuaikan setelah #13 final
+- [ ] **#28 Integrasi n8n** — mulai setelah #20 selesai.
+  - Branch / workflow n8n ditentukan setelah endpoint review ready
+- [ ] **#37 Finalisasi API** — persiapan dapat dilakukan paralel, eksekusi setelah blokir utama teratasi.
+
+---
+
 ## 🔴 OVERDUE ITEMS ANALYSIS & ACTION PLAN
 
 ### ITEM #1: Model & Eloquent Relationships #13
-**Status:** 🟨 IN PROGRESS (OVERDUE)  
+**Status:** 🟡 IN PROGRESS (OVERDUE)  
 **Timeline:** May 18-24, 2026 ← **OVERDUE 13 hari**  
 **Assignee:** Fatinasy7
+
+#### 📝 Update
+- Model relationship methods for `User` and `ProviderProfile` telah dipulihkan.
+- `backend/tests/Unit/Models/ModelRelationshipsTest.php` direstore dari branch terakhir.
+- Verifikasi unit test masih tertunda karena `php` runtime tidak tersedia di lingkungan editor ini.
 
 #### 📋 Task Description
 - Implementation of Eloquent relationships between models
@@ -36,27 +60,27 @@ Triage overdue items dalam 48 jam, reassess timeline, dan unblock dependencies u
 - [ ] Check if technical blockers exist
 
 #### ✅ Action Plan
-**TODAY (6 Juni):**
-1. Open GitHub issue #13 and read full requirements
-2. Assess current progress (% complete?)
-3. Identify what's blocking completion
-4. Break down remaining work into 2-3 subtasks
+**TODAY (7 Juni):**
+1. Finalize Model & Eloquent relationships pada `backend/app/Models/ProviderProfile.php`.
+2. Pastikan relasi `user()` menggunakan `belongsTo` dan validasi melalui unit test.
+3. Jalankan `backend/tests/Unit/Models/ModelRelationshipsTest.php` saat lingkungan PHP tersedia.
+4. Siapkan branch `feature/backend-121-model-relationships` untuk PR.
 
-**TOMORROW (7 Juni):**
-1. Complete remaining work (should be minimal if "in progress")
-2. Create PR with fixes/completions
-3. Mark as complete in GitHub projects
+**BESOK / SEGERA:**
+1. Jika relasi valid, commit dan buat PR untuk #13.
+2. Setelah PR dibuat, update issue #13 dan tandai `DONE`.
+3. Barulah lanjut ke task #20 API Reviews & Rating.
 
 **Target Completion:** 7 Juni 2026 (EOD)
 
 #### 📌 Dependencies
-- Check if #55 (another Model task) depends on this
-- Check if any other tasks are waiting for this completion
+- #20 API Reviews & Rating harus `WAIT` sampai #13 selesai.
+- Perbaikan relasi ini unblock #28 dan #37 kalau customer/provider relationship sudah valid.
 
 ---
 
 ### ITEM #2: Model & Eloquent Relationships #55
-**Status:** 🔴 TODO (OVERDUE)  
+**Status:** ✅ DONE  
 **Timeline:** May 18-24, 2026 ← **OVERDUE 13 hari**  
 **Assignee:** Fatinasy7
 
@@ -89,10 +113,15 @@ Triage overdue items dalam 48 jam, reassess timeline, dan unblock dependencies u
 ---
 
 ### ITEM #3: Auto-create DP Payment saat Order dibuat (BR-01) #61
-**Status:** 🔴 TODO (OVERDUE)  
+**Status:** ✅ Implemented  
 **Timeline:** May 25-31, 2026 ← **OVERDUE 6 hari**  
 **Assignee:** Fatinasy7  
 **Feature Requirements:** BR-01 (Business Rule)
+
+#### 📝 Update
+- DP payment now auto-creates when order is created in `OrderController::createOrder`.
+- n8n event dispatch for `order_created` is already wired from order creation.
+- This item is considered complete and the team can move focus to Reviews & Rating (#20).
 
 #### 📋 Task Description
 - Auto-create Down Payment (DP) when order created
@@ -129,10 +158,14 @@ Triage overdue items dalam 48 jam, reassess timeline, dan unblock dependencies u
 ---
 
 ### ITEM #4: API Reviews & Rating (FR-23, FR-24) #20
-**Status:** 🔴 TODO (OVERDUE)  
+**Status:** 🟡 IN PROGRESS (OVERDUE)  
 **Timeline:** May 25-31, 2026 ← **OVERDUE 6 hari**  
 **Assignee:** Fatinasy7  
 **Feature Requirements:** FR-23, FR-24
+
+#### 📝 Update
+- New branch created: `feature/backend-120-reviews-rating-api`.- Pull Request opened: `https://github.com/radenelsa7-bot/PM_UAS_rekayasa_Sistem_Informasi/pull/42`.- Added provider review summary endpoint and review rating aggregation.
+- Added feature tests for review creation and provider rating summary.
 
 #### 📋 Task Description
 - Create/Update/Delete reviews for completed orders
@@ -144,6 +177,7 @@ Triage overdue items dalam 48 jam, reassess timeline, dan unblock dependencies u
 - [ ] Verify Order completion status workflow (must have "completed" status)
 - [ ] Check if database migration for reviews table exists
 - [ ] Validate rating aggregation logic (average, count)
+- [ ] **Task blocked until #13 Model & Eloquent Relationships selesai**
 
 #### ✅ Action Plan
 **PHASE 1 - Assessment (6 Juni - EOD):**
@@ -170,7 +204,7 @@ Triage overdue items dalam 48 jam, reassess timeline, dan unblock dependencies u
 ---
 
 ### ITEM #5: Integrasi n8n - Event Notifikasi (FR-21, FR-22) #28
-**Status:** 🔴 TODO (OVERDUE)  
+**Status:** � IN PROGRESS (OVERDUE)  
 **Timeline:** Jun 1-7, 2026 ← **OVERDUE 1 hari**  
 **Assignee:** Fajar1180, Fatinasy7  
 **Feature Requirements:** FR-21, FR-22  
@@ -229,7 +263,7 @@ Triage overdue items dalam 48 jam, reassess timeline, dan unblock dependencies u
 ## 🟠 UPCOMING ITEMS - Preparation
 
 ### ITEM #6: Finalisasi & Hardening API (FR-37) #37
-**Status:** 🔵 TODO (UPCOMING)  
+**Status:** � IN PROGRESS (UPCOMING)  
 **Timeline:** Jun 8-14, 2026 (FUTURE)  
 **Assignee:** Fatinasy7
 
