@@ -103,14 +103,27 @@ class PaymentController extends Controller
 
       $order = $payment->order;
 
+      $eventName = match (strtoupper($payment->payment_type)) {
+        'DP' => 'dp_paid',
+        'FINAL' => 'final_paid',
+        default => 'payment_' . strtolower($payment->payment_type) . '_paid',
+      };
+
       app(N8nNotificationService::class)->dispatch(
-        'payment_' . strtolower($payment->payment_type) . '_paid',
+        $eventName,
         [
           'order_id' => $order->id,
+          'order_code' => $order->order_code,
           'payment_id' => $payment->id,
           'payment_type' => $payment->payment_type,
           'amount' => $payment->amount,
           'order_status' => $order->status,
+          'customer_name' => $order->customer?->name,
+          'customer_email' => $order->customer?->email,
+          'customer_phone' => $order->customer?->phone,
+          'provider_name' => $order->provider?->name,
+          'provider_email' => $order->provider?->email,
+          'provider_phone' => $order->provider?->phone,
         ]
       );
 
