@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProviderProfile extends Model
@@ -26,13 +26,18 @@ class ProviderProfile extends Model
     'avg_rating' => 'decimal:2',
   ];
 
-  public function user(): HasOne
+  public function user(): BelongsTo
   {
-    return $this->hasOne(User::class, 'id', 'user_id');
+    return $this->belongsTo(User::class, 'user_id');
   }
 
   public function services(): HasMany
   {
     return $this->hasMany(ProviderService::class);
+  }
+
+  public function reviews(): HasMany
+  {
+    return $this->hasMany(Review::class, 'provider_id', 'user_id');
   }
 }
