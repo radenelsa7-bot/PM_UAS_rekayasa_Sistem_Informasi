@@ -115,7 +115,7 @@ class ReviewController extends Controller
       ->pluck('count', 'rating')
       ->toArray();
 
-    $distribution = array_merge(array_fill(1, 5, 0), $distribution);
+    $distribution = array_replace(array_fill(1, 5, 0), $distribution);
 
     return response()->json([
       'data' => [

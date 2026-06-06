@@ -61,7 +61,7 @@ class ReviewRatingApiTest extends TestCase
         ProviderProfile::factory()->create(['user_id' => $provider->id]);
         $category = ServiceCategory::factory()->create();
 
-        $order = Order::create([
+        $order1 = Order::create([
             'order_code' => 'ORD-' . now()->format('Ymd') . '-0002',
             'customer_id' => $customer->id,
             'provider_id' => $provider->id,
@@ -73,20 +73,44 @@ class ReviewRatingApiTest extends TestCase
             'status' => 'COMPLETED',
         ]);
 
+        $order2 = Order::create([
+            'order_code' => 'ORD-' . now()->format('Ymd') . '-0003',
+            'customer_id' => $customer->id,
+            'provider_id' => $provider->id,
+            'category_id' => $category->id,
+            'schedule_at' => now()->addDays(2),
+            'address' => 'Jl. Test 789',
+            'estimated_price' => 120000,
+            'final_price' => 120000,
+            'status' => 'COMPLETED',
+        ]);
+
+        $order3 = Order::create([
+            'order_code' => 'ORD-' . now()->format('Ymd') . '-0004',
+            'customer_id' => $customer->id,
+            'provider_id' => $provider->id,
+            'category_id' => $category->id,
+            'schedule_at' => now()->addDays(3),
+            'address' => 'Jl. Test 101',
+            'estimated_price' => 110000,
+            'final_price' => 110000,
+            'status' => 'COMPLETED',
+        ]);
+
         Review::factory()->create([
-            'order_id' => $order->id,
+            'order_id' => $order1->id,
             'customer_id' => $customer->id,
             'provider_id' => $provider->id,
             'rating' => 5,
         ]);
         Review::factory()->create([
-            'order_id' => $order->id,
+            'order_id' => $order2->id,
             'customer_id' => $customer->id,
             'provider_id' => $provider->id,
             'rating' => 4,
         ]);
         Review::factory()->create([
-            'order_id' => $order->id,
+            'order_id' => $order3->id,
             'customer_id' => $customer->id,
             'provider_id' => $provider->id,
             'rating' => 3,
