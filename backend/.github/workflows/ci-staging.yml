@@ -3,7 +3,9 @@ name: CI - Integration Staging
 on:
   workflow_dispatch: {}
   push:
-    branches: [ feature/backend-122-ci-staging ]
+    branches: [ feature/backend-122-ci-staging, feature/backend-123-deploy-smoke ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   integration-staging:

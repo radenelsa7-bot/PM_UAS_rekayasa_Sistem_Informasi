@@ -10,7 +10,7 @@ Summary
 
 What I updated
 - `backend/DEPLOY_STATUS.md`: updated status, added step-by-step smoke-test instructions and environment requirements.
-- `backend/.github/workflows/ci-staging.yml`: improved staging CI workflow to skip when secrets are missing, preventing false failures on non-deploy branches.
+- `backend/.github/workflows/ci-staging.yml`: improved staging CI workflow to skip when secrets are missing and updated triggers to include `feature/backend-123-deploy-smoke`.
 - Confirmed presence of:
   - `deploy/smoke-test.sh` (script to run smoke test)
   - `app/Console/Commands/DeploySmokeTest.php` (artisan `deploy:smoke` command)
@@ -31,7 +31,7 @@ Expected outcome: exit code 0 and printed information about health check and art
 
 Notes
 - I pushed the documentation update to branch `feature/backend-123-deploy-smoke` on the remote.
-- I could not create a GitHub Pull Request automatically due to authentication restrictions; please open a PR from the branch to `main` or tell me if you want me to attempt again with credentials.
+- GitHub Actions are now configured to run the staging workflow for this branch when repository secrets are available.
 
 Next steps (to be done on staging environment)
 - Execute smoke test and record results in this file or `backend/DEPLOY_STATUS.md`.
