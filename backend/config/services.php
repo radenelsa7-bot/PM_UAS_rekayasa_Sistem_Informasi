@@ -60,4 +60,9 @@ return [
         'alert_email' => env('PAYOUT_ALERT_EMAIL'),
     ],
 
+    'payouts' => [
+        'alert_webhook' => env('PAYOUT_ALERT_WEBHOOK'),
+        'alert_email' => env('PAYOUT_ALERT_EMAIL'),
+    ],
+
 ];
