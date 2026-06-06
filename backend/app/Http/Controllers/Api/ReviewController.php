@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ReviewController extends Controller
 {
@@ -52,7 +53,7 @@ class ReviewController extends Controller
 
     $validated = $request->validate([
       'rating' => 'required|integer|between:1,5',
-      'comment' => 'nullable|string',
+      'comment' => 'nullable|string|max:1000|min:5',
     ]);
 
     $review = Review::create([
@@ -69,6 +70,13 @@ class ReviewController extends Controller
       $avgRating = Review::where('provider_id', $order->provider_id)->avg('rating');
       $providerProfile->update(['avg_rating' => round($avgRating, 2)]);
     }
+
+    Log::channel('api')->info('Review created', [
+      'review_id' => $review->id,
+      'order_id' => $order->id,
+      'customer_id' => $user->id,
+      'rating' => $validated['rating'],
+    ]);
 
     return response()->json([
       'message' => 'review created',

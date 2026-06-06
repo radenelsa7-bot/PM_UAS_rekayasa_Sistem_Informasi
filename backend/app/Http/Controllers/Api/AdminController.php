@@ -7,6 +7,7 @@ use App\Models\ProviderProfile;
 use App\Services\N8nNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -59,6 +60,14 @@ class AdminController extends Controller
 
     $provider->update([
       'is_verified' => $validated['is_verified'],
+    ]);
+
+    Log::channel('api')->warning('Provider verification updated', [
+      'admin_id' => $user->id,
+      'provider_id' => $provider->id,
+      'user_id' => $provider->user_id,
+      'is_verified' => $provider->is_verified,
+      'timestamp' => now(),
     ]);
 
     app(N8nNotificationService::class)->dispatch(

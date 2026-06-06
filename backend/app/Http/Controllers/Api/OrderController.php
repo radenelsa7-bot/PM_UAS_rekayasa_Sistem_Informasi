@@ -9,6 +9,7 @@ use App\Services\PaymentFinanceService;
 use App\Services\N8nNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -33,10 +34,10 @@ class OrderController extends Controller
       'provider_id' => 'required|exists:users,id',
       'provider_service_id' => 'nullable|exists:provider_services,id',
       'category_id' => 'required|exists:service_categories,id',
-      'schedule_at' => 'required|date_format:Y-m-d H:i:s',
-      'address' => 'required|string',
-      'notes' => 'nullable|string',
-      'estimated_price' => 'required|integer|min:1',
+      'schedule_at' => 'required|date_format:Y-m-d H:i:s|after:now',
+      'address' => 'required|string|min:10|max:500',
+      'notes' => 'nullable|string|min:5|max:2000',
+      'estimated_price' => 'required|integer|min:10000|max:100000000',
     ]);
 
     $order = Order::create([
@@ -59,6 +60,15 @@ class OrderController extends Controller
       'payment_type' => 'DP',
       'amount' => $dpAmount,
       'status' => 'UNPAID',
+    ]);
+
+    Log::channel('api')->info('Order created', [
+      'order_id' => $order->id,
+      'order_code' => $order->order_code,
+      'customer_id' => $order->customer_id,
+      'provider_id' => $order->provider_id,
+      'estimated_price' => $order->estimated_price,
+      'dp_amount' => $dpAmount,
     ]);
 
     app(N8nNotificationService::class)->dispatch('order_created', [
@@ -163,6 +173,12 @@ class OrderController extends Controller
     if ($validated['action'] === 'accept') {
       $order->update(['status' => 'ACCEPTED']);
 
+      Log::channel('api')->info('Order accepted', [
+        'order_id' => $order->id,
+        'provider_id' => $order->provider_id,
+        'status' => $order->status,
+      ]);
+
       app(N8nNotificationService::class)->dispatch('order_accepted', [
         'order_id' => $order->id,
         'order_code' => $order->order_code,
@@ -187,6 +203,13 @@ class OrderController extends Controller
           $this->paymentFinanceService->applyRefundPolicy($refundPayment, $order, 'order_rejected')
         );
       }
+
+      Log::channel('api')->warning('Order rejected', [
+        'order_id' => $order->id,
+        'provider_id' => $order->provider_id,
+        'status' => $order->status,
+        'refund_count' => $refundPayments->count(),
+      ]);
 
       app(N8nNotificationService::class)->dispatch('order_rejected', [
         'order_id' => $order->id,
@@ -239,6 +262,12 @@ class OrderController extends Controller
 
     $order->update(['status' => 'IN_PROGRESS']);
 
+    Log::channel('api')->info('Work started', [
+      'order_id' => $order->id,
+      'provider_id' => $order->provider_id,
+      'status' => $order->status,
+    ]);
+
     app(N8nNotificationService::class)->dispatch('work_started', [
       'order_id' => $order->id,
       'order_code' => $order->order_code,
@@ -280,7 +309,7 @@ class OrderController extends Controller
     }
 
     $validated = $request->validate([
-      'final_price' => 'required|integer|min:1',
+      'final_price' => 'required|integer|min:10000|max:100000000',
     ]);
 
     $order->update([
@@ -295,6 +324,13 @@ class OrderController extends Controller
       'payment_type' => 'FINAL',
       'amount' => $finalAmount,
       'status' => 'UNPAID',
+    ]);
+
+    Log::channel('api')->info('Order completed', [
+      'order_id' => $order->id,
+      'provider_id' => $order->provider_id,
+      'final_price' => $validated['final_price'],
+      'final_amount' => $finalAmount,
     ]);
 
     app(N8nNotificationService::class)->dispatch('order_completed', [
