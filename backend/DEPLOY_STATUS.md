@@ -40,6 +40,7 @@
 - [x] GitHub Secrets documentation
 - [x] Runbook for operations
 - [x] CI staging workflow improvement to skip when secrets are not configured
+- [x] CI staging workflow trigger updated to include feature/backend-123-deploy-smoke
 
 ---
 
@@ -100,7 +101,7 @@
 
 ---
 
-**Status:** In Progress — Ready for smoke execution (needs staging environment)
+**Status:** In Progress — Documentation complete and CI trigger configured; ready for smoke execution once staging secrets are available
 **Last Updated:** 6 Juni 2026
 **Next Review:** 8 Juni 2026
 
