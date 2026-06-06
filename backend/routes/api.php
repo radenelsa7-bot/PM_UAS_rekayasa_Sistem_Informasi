@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\CatalogController;
+use App\Http\Controllers\Api\N8nIntegrationController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TreasurerController;
@@ -72,6 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Webhook routes (tanpa authentication)
 Route::post('/webhooks/payment', [PaymentController::class, 'webhookPaymentCallback']);
+Route::post('/integrations/n8n/events', [N8nIntegrationController::class, 'dispatchEvent']);
 
 // Monitoring metrics endpoint
 Route::get(config('monitoring.metrics_path', '/metrics'), [MetricsController::class, 'show']);
