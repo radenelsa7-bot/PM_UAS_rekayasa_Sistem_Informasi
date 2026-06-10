@@ -505,6 +505,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             items: const [
               DropdownMenuItem(value: 'CUSTOMER', child: Text('Pelanggan')),
               DropdownMenuItem(value: 'PROVIDER', child: Text('Teknisi')),
+              DropdownMenuItem(value: 'TREASURER', child: Text('Bendahara')),
             ],
             onChanged: (value) {
               if (value != null) {

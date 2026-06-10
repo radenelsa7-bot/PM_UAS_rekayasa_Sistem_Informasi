@@ -29,6 +29,7 @@
         <select id="role" class="w-full border p-2 rounded">
           <option value="CUSTOMER">CUSTOMER</option>
           <option value="PROVIDER">PROVIDER</option>
+          <option value="TREASURER">TREASURER</option>
         </select>
       </div>
       <div class="flex items-center justify-between">

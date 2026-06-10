@@ -24,7 +24,7 @@ class AuthController extends Controller
             'email' => 'required|string|email|unique:users',
             'phone' => 'required|string|max:30',
             'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|in:CUSTOMER,PROVIDER',
+            'role' => 'required|in:CUSTOMER,PROVIDER,TREASURER',
         ]);
 
         $user = User::create([
