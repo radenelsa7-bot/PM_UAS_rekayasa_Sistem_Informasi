@@ -22,24 +22,35 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
     if (file != null) setState(() => _picked = file);
   }
 
   Future<void> _deletePhoto() async {
     setState(() => _isSaving = true);
     try {
-      final success = await ref.read(authControllerProvider.notifier).deleteProfilePhoto();
-      if (!context.mounted) return;
+      final success = await ref
+          .read(authControllerProvider.notifier)
+          .deleteProfilePhoto();
+      if (!mounted) return;
       if (success) {
         setState(() => _picked = null);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Foto profil berhasil dihapus')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Foto profil berhasil dihapus')),
+        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal menghapus foto profil')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal menghapus foto profil')),
+        );
       }
     } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal menghapus foto profil')));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal menghapus foto profil')),
+      );
     } finally {
       setState(() => _isSaving = false);
     }
@@ -50,7 +61,10 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
     try {
       MultipartFile? mf;
       if (_picked != null) {
-        mf = await MultipartFile.fromFile(_picked!.path, filename: _picked!.name);
+        mf = await MultipartFile.fromFile(
+          _picked!.path,
+          filename: _picked!.name,
+        );
       }
       final api = ref.read(apiServiceProvider);
       final result = await api.updateProfile(
@@ -67,28 +81,36 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
         final profilePhotoPath = user['profile_photo_path'] as String?;
 
         // Update storage
-        await ref.read(authStorageProvider).saveUserData(
-          userId: user['id'] ?? 0,
-          userRole: user['role'] ?? 'CUSTOMER',
-          userEmail: user['email'] ?? '',
-          fullName: fullName,
-          phoneNumber: phoneNumber,
-          profilePhotoPath: profilePhotoPath,
-        );
+        await ref
+            .read(authStorageProvider)
+            .saveUserData(
+              userId: user['id'] ?? 0,
+              userRole: user['role'] ?? 'CUSTOMER',
+              userEmail: user['email'] ?? '',
+              fullName: fullName,
+              phoneNumber: phoneNumber,
+              profilePhotoPath: profilePhotoPath,
+            );
 
         // Update auth controller state
-        ref.read(authControllerProvider.notifier).state = ref.read(authControllerProvider).copyWith(
-          userFullName: fullName,
-          userPhoneNumber: phoneNumber,
-          userProfilePhotoPath: profilePhotoPath,
-        );
+        ref
+            .read(authControllerProvider.notifier)
+            .updateState(
+              (current) => current.copyWith(
+                userFullName: fullName,
+                userPhoneNumber: phoneNumber,
+                userProfilePhotoPath: profilePhotoPath,
+              ),
+            );
       }
 
-      if (!context.mounted) return;
+      if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal menyimpan profil')));
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Gagal menyimpan profil')));
     } finally {
       setState(() => _isSaving = false);
     }
@@ -104,12 +126,15 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
-    final hasCurrentPhoto = authState.userProfilePhotoPath != null || _picked != null;
+    final hasCurrentPhoto =
+        authState.userProfilePhotoPath != null || _picked != null;
     final backgroundImage = _picked != null
         ? FileImage(File(_picked!.path)) as ImageProvider<Object>?
         : authState.userProfilePhotoPath != null
-            ? NetworkImage('${Uri.base.origin}/storage/${authState.userProfilePhotoPath}')
-            : null;
+        ? NetworkImage(
+            '${Uri.base.origin}/storage/${authState.userProfilePhotoPath}',
+          )
+        : null;
 
     return AlertDialog(
       title: const Text('Edit Profil'),
@@ -122,12 +147,21 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
               child: CircleAvatar(
                 radius: 36,
                 backgroundImage: backgroundImage,
-                child: backgroundImage == null ? const Icon(Icons.camera_alt) : null,
+                child: backgroundImage == null
+                    ? const Icon(Icons.camera_alt)
+                    : null,
               ),
             ),
             const SizedBox(height: 12),
-            TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'Nama')),
-            TextField(controller: _phoneCtrl, decoration: const InputDecoration(labelText: 'No HP'), keyboardType: TextInputType.phone),
+            TextField(
+              controller: _nameCtrl,
+              decoration: const InputDecoration(labelText: 'Nama'),
+            ),
+            TextField(
+              controller: _phoneCtrl,
+              decoration: const InputDecoration(labelText: 'No HP'),
+              keyboardType: TextInputType.phone,
+            ),
           ],
         ),
       ),
@@ -137,8 +171,20 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
             onPressed: _isSaving ? null : _deletePhoto,
             child: const Text('Hapus Foto'),
           ),
-        TextButton(onPressed: _isSaving ? null : () => Navigator.of(context).pop(false), child: const Text('Batal')),
-        ElevatedButton(onPressed: _isSaving ? null : _save, child: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Simpan')),
+        TextButton(
+          onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: _isSaving ? null : _save,
+          child: _isSaving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Simpan'),
+        ),
       ],
     );
   }
