@@ -16,6 +16,10 @@ class AuthController extends StateNotifier<AuthState> {
 
   final Ref _ref;
 
+  void updateState(AuthState Function(AuthState) update) {
+    state = update(state);
+  }
+
   Future<void> loadToken() async {
     state = state.copyWith(isLoading: true);
     try {
@@ -24,8 +28,12 @@ class AuthController extends StateNotifier<AuthState> {
       final userRole = await _ref.read(authStorageProvider).getUserRole();
       final userEmail = await _ref.read(authStorageProvider).getUserEmail();
       final fullName = await _ref.read(authStorageProvider).getUserFullName();
-      final phoneNumber = await _ref.read(authStorageProvider).getUserPhoneNumber();
-      final profilePhotoPath = await _ref.read(authStorageProvider).getUserProfilePhotoPath();
+      final phoneNumber = await _ref
+          .read(authStorageProvider)
+          .getUserPhoneNumber();
+      final profilePhotoPath = await _ref
+          .read(authStorageProvider)
+          .getUserProfilePhotoPath();
 
       if (token != null) {
         _ref.read(apiServiceProvider).setToken(token);
@@ -57,7 +65,11 @@ class AuthController extends StateNotifier<AuthState> {
     required String password,
     required String role,
   }) async {
-    state = state.copyWith(isLoading: true, errorMessage: null, fieldErrors: {});
+    state = state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+      fieldErrors: {},
+    );
     try {
       final apiService = _ref.read(apiServiceProvider);
       await apiService.register(
@@ -72,7 +84,8 @@ class AuthController extends StateNotifier<AuthState> {
       return true;
     } on DioException catch (e) {
       final responseData = e.response?.data;
-      if (e.response?.statusCode == 422 && responseData is Map<String, dynamic>) {
+      if (e.response?.statusCode == 422 &&
+          responseData is Map<String, dynamic>) {
         final fieldErrors = <String, String?>{};
         final errors = responseData['errors'];
         if (errors is Map<String, dynamic>) {
@@ -193,14 +206,16 @@ class AuthController extends StateNotifier<AuthState> {
         final phoneNumber = user['phone_number'] as String?;
         final profilePhotoPath = user['profile_photo_path'] as String?;
 
-        await _ref.read(authStorageProvider).saveUserData(
-          userId: user['id'] ?? state.userId ?? 0,
-          userRole: user['role'] ?? state.userRole ?? 'CUSTOMER',
-          userEmail: user['email'] ?? state.userEmail ?? '',
-          fullName: fullName,
-          phoneNumber: phoneNumber,
-          profilePhotoPath: profilePhotoPath,
-        );
+        await _ref
+            .read(authStorageProvider)
+            .saveUserData(
+              userId: user['id'] ?? state.userId ?? 0,
+              userRole: user['role'] ?? state.userRole ?? 'CUSTOMER',
+              userEmail: user['email'] ?? state.userEmail ?? '',
+              fullName: fullName,
+              phoneNumber: phoneNumber,
+              profilePhotoPath: profilePhotoPath,
+            );
 
         state = state.copyWith(
           isLoading: false,

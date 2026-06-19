@@ -88,8 +88,9 @@ class HomePage extends ConsumerWidget {
                     children: [
                       CircleAvatar(
                         radius: 40,
-                        backgroundColor:
-                            Theme.of(context).colorScheme.surfaceContainerHighest,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                         backgroundImage: state.userProfilePhotoPath != null
                             ? NetworkImage(
                                 '${Uri.base.origin}/storage/${state.userProfilePhotoPath}',
@@ -135,9 +136,12 @@ class HomePage extends ConsumerWidget {
                             context: context,
                             builder: (_) => const EditProfileDialog(),
                           );
+                          if (!context.mounted) return;
                           if (res == true) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Profil diperbarui')),
+                              const SnackBar(
+                                content: Text('Profil diperbarui'),
+                              ),
                             );
                           }
                         },
