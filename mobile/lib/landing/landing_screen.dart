@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../features/auth/login_page.dart';
+import '../features/auth/login_screen.dart';
 
 const Color _navy = Color(0xFF0D2B55);
 const Color _orange = Color(0xFFF97316);
@@ -22,7 +22,7 @@ class LandingScreen extends StatelessWidget {
             _CtaSection(
               onMulaiSekarang: () {
                 Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
                 );
               },
             ),
