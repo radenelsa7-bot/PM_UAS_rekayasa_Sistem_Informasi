@@ -20,6 +20,14 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
   XFile? _picked;
   bool _isSaving = false;
 
+  @override
+  void initState() {
+    super.initState();
+    final authState = ref.read(authControllerProvider);
+    _nameCtrl.text = authState.userFullName ?? '';
+    _phoneCtrl.text = authState.userPhoneNumber ?? '';
+  }
+
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final file = await picker.pickImage(
