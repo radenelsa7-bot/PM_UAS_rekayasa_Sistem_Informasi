@@ -66,8 +66,8 @@ class HomePage extends ConsumerWidget {
 
   Widget _buildAccountTab(BuildContext context, dynamic state) {
     final displayName = state.userFullName?.isNotEmpty == true
-        ? state.userFullName
-        : state.userEmail ?? 'N/A';
+      ? state.userFullName
+      : state.userEmail ?? 'N/A';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -112,12 +112,14 @@ class HomePage extends ConsumerWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              state.userEmail ?? 'N/A',
-                              style: Theme.of(context).textTheme.bodySmall,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            // Show email only when a full name exists to avoid duplicate email rendering
+                            if (state.userFullName?.isNotEmpty == true)
+                              Text(
+                                state.userEmail ?? 'N/A',
+                                style: Theme.of(context).textTheme.bodySmall,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             if (state.userPhoneNumber?.isNotEmpty == true)
                               Padding(
                                 padding: const EdgeInsets.only(top: 4),
