@@ -90,7 +90,7 @@
     <section class="container py-5">
       <div class="row g-4 align-items-center">
         <div class="col-md-6" data-anim="fade-right">
-          <img src="/assets/placeholder-worker.jpg" alt="Tukang sedang bekerja" class="img-fluid rounded shadow-sm" />
+          <img src="/assets/icon-construction.svg" alt="Tukang sedang bekerja" class="img-fluid rounded shadow-sm" style="max-width:420px;" />
         </div>
         <div class="col-md-6" data-anim="fade-left">
           <h2 class="fw-bold">Kami Menghubungkan Anda dengan Tukang Terbaik</h2>
@@ -234,9 +234,9 @@
       <h2 class="fw-bold mb-4">Portofolio</h2>
       <div class="row g-3">
         @for($i=1;$i<=6;$i++)
-        <div class="col-sm-6 col-md-4">
+            <div class="col-sm-6 col-md-4">
           <div class="card portfolio-card overflow-hidden">
-            <img src="/assets/portfolio-placeholder.jpg" class="card-img-top" alt="Project">
+            <img src="/assets/icon-construction.svg" class="card-img-top" alt="Project">
             <div class="card-body">
               <h5 class="card-title">Contoh Project {{$i}}</h5>
               <p class="small text-muted">Renovasi, instalasi, dan perbaikan profesional.</p>
