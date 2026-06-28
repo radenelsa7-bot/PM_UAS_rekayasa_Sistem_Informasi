@@ -36,90 +36,106 @@ class LandingScreen extends StatelessWidget {
 
 // ─── HERO ────────────────────────────────────────────────────────────────────
 
-class _HeroSection extends StatelessWidget {
+class _HeroSection extends StatefulWidget {
+  @override
+  State<_HeroSection> createState() => _HeroSectionState();
+}
+
+class _HeroSectionState extends State<_HeroSection> {
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       color: _navy,
       padding: const EdgeInsets.fromLTRB(24, 64, 24, 40),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-            decoration: BoxDecoration(
-              color: Color.fromRGBO(249, 115, 22, 0.15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Color.fromRGBO(249, 115, 22, 0.35)),
-            ),
-            child: const Text(
-              '⚡  Platform Jasa Lokal Terpercaya',
-              style: TextStyle(
-                color: _orange,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.3,
-              ),
-            ),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 700),
+        builder: (context, v, child) => Opacity(
+          opacity: v,
+          child: Transform.translate(
+            offset: Offset(0, (1 - v) * 12),
+            child: child,
           ),
-          const SizedBox(height: 24),
-          Semantics(
-            label: 'Logo TukangDekat',
-            child: Container(
-              width: 88,
-              height: 88,
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
-                color: _orange,
+                color: Color.fromRGBO(249, 115, 22, 0.15),
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Color.fromRGBO(249, 115, 22, 0.35)),
               ),
-              child: Center(
-                child: CircleAvatar(
-                  radius: 36,
-                  backgroundColor: Colors.white,
-                  child: Text(
-                    'TD',
-                    style: TextStyle(
-                      color: _orange,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 28,
+              child: const Text(
+                '⚡  Platform Jasa Lokal Terpercaya',
+                style: TextStyle(
+                  color: _orange,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Semantics(
+              label: 'Logo TukangDekat',
+              child: Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  color: _orange,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Center(
+                  child: CircleAvatar(
+                    radius: 36,
+                    backgroundColor: Colors.white,
+                    child: Text(
+                      'TD',
+                      style: TextStyle(
+                        color: _orange,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 28,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          RichText(
-            textAlign: TextAlign.center,
-            text: const TextSpan(
-              style: TextStyle(
-                color: _white,
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                height: 1.25,
-              ),
-              children: [
-                TextSpan(text: 'Solusi Rumah Anda\nAda di '),
-                TextSpan(
-                  text: 'TukangDekat',
-                  style: TextStyle(color: _orange),
+            const SizedBox(height: 20),
+            RichText(
+              textAlign: TextAlign.center,
+              text: const TextSpan(
+                style: TextStyle(
+                  color: _white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  height: 1.25,
                 ),
-              ],
+                children: [
+                  TextSpan(text: 'Solusi Rumah Anda\nAda di '),
+                  TextSpan(
+                    text: 'TukangDekat',
+                    style: TextStyle(color: _orange),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 14),
-          const Text(
-            'Hubungkan kebutuhan perbaikan rumah Anda dengan teknisi profesional di Kecamatan Bojongloa Kaler secara cepat dan transparan.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 13.5,
-              height: 1.6,
+            const SizedBox(height: 14),
+            const Text(
+              'Hubungkan kebutuhan perbaikan rumah Anda dengan teknisi profesional di Kecamatan Bojongloa Kaler secara cepat dan transparan.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 13.5,
+                height: 1.6,
+              ),
             ),
-          ),
-          const SizedBox(height: 28),
-          const _StatsRow(),
-        ],
+            const SizedBox(height: 28),
+            const _StatsRow(),
+          ],
+        ),
       ),
     );
   }
@@ -304,63 +320,67 @@ class _ServiceCard extends StatelessWidget {
     final iconBg = data.isOrange
         ? const Color(0xFFFFF3EC)
         : const Color(0xFFEEF3FA);
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _white,
+    return Material(
+      color: _white,
+      elevation: 2,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE8E0D5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: Text(data.icon, style: const TextStyle(fontSize: 20)),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            data.name,
-            style: const TextStyle(
-              color: _navy,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            data.desc,
-            style: const TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 11,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF3EC),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              data.tag,
-              style: const TextStyle(
-                color: _orange,
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
+        onTap: () {},
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(data.icon, style: const TextStyle(fontSize: 20)),
+                ),
               ),
-            ),
+              const SizedBox(height: 10),
+              Text(
+                data.name,
+                style: const TextStyle(
+                  color: _navy,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                data.desc,
+                style: const TextStyle(
+                  color: Color(0xFF9CA3AF),
+                  fontSize: 12,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3EC),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  data.tag,
+                  style: const TextStyle(
+                    color: _orange,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
