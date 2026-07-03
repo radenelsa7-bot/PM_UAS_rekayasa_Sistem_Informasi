@@ -3,6 +3,7 @@ class ProviderService {
   final int? categoryId;
   final String? categoryName;
   final String name;
+  final String? description;
   final int basePrice;
   final String priceUnit;
   final bool isActive;
@@ -12,6 +13,7 @@ class ProviderService {
     this.categoryId,
     this.categoryName,
     required this.name,
+    this.description,
     required this.basePrice,
     required this.priceUnit,
     required this.isActive,
@@ -24,6 +26,7 @@ class ProviderService {
       categoryId: json['category_id'],
       categoryName: category is Map<String, dynamic> ? category['name']?.toString() : null,
       name: json['name'] ?? '',
+      description: json['description'],
       basePrice: json['base_price'] ?? 0,
       priceUnit: json['price_unit'] ?? '',
       isActive: json['is_active'] ?? false,

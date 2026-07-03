@@ -19,6 +19,7 @@ class ProviderServiceRequest extends FormRequest
             return [
                 'category_id' => 'sometimes|exists:service_categories,id',
                 'name' => 'sometimes|string|max:120',
+                'description' => 'sometimes|nullable|string|max:1000',
                 'base_price' => 'sometimes|integer|min:0',
                 'price_unit' => 'sometimes|nullable|string|max:30',
                 'is_active' => 'sometimes|boolean',
@@ -28,6 +29,7 @@ class ProviderServiceRequest extends FormRequest
         return [
             'category_id' => 'required|exists:service_categories,id',
             'name' => 'required|string|max:120',
+            'description' => 'nullable|string|max:1000',
             'base_price' => 'required|integer|min:0',
             'price_unit' => 'nullable|string|max:30',
             'is_active' => 'sometimes|boolean',

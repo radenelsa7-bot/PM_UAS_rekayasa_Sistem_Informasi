@@ -242,9 +242,30 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> updateProviderProfile({
+    String? businessName,
+    String? description,
+    String? area,
+    String? address,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (businessName != null) data['business_name'] = businessName;
+      if (description != null) data['description'] = description;
+      if (area != null) data['area'] = area;
+      if (address != null) data['address'] = address;
+
+      final response = await dio.put('/api/provider/profile', data: data);
+      return Map<String, dynamic>.from(response.data['data'] ?? {});
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<int> createProviderService({
     required int categoryId,
     required String name,
+    String? description,
     required int basePrice,
     String? priceUnit,
     bool isActive = true,
@@ -253,6 +274,7 @@ class ApiService {
       final response = await dio.post('/api/provider/services', data: {
         'category_id': categoryId,
         'name': name,
+        'description': description,
         'base_price': basePrice,
         'price_unit': priceUnit,
         'is_active': isActive,
@@ -267,6 +289,7 @@ class ApiService {
     required int serviceId,
     int? categoryId,
     String? name,
+    String? description,
     int? basePrice,
     String? priceUnit,
     bool? isActive,
@@ -275,6 +298,7 @@ class ApiService {
       final data = <String, dynamic>{};
       if (categoryId != null) data['category_id'] = categoryId;
       if (name != null) data['name'] = name;
+      if (description != null) data['description'] = description;
       if (basePrice != null) data['base_price'] = basePrice;
       if (priceUnit != null) data['price_unit'] = priceUnit;
       if (isActive != null) data['is_active'] = isActive;

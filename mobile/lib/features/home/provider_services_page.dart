@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import '../../core/models/category_model.dart';
 import '../../core/models/provider_model.dart';
 import '../../core/services/api_service.dart';
+import 'catalog_providers.dart';
 
 final providerServicesControllerProvider = StateNotifierProvider<ProviderServicesController, ProviderServicesState>(
   (ref) => ProviderServicesController(ref),
@@ -52,6 +53,7 @@ class ProviderServicesController extends StateNotifier<ProviderServicesState> {
   Future<bool> createService({
     required int categoryId,
     required String name,
+    String? description,
     required int basePrice,
     String? priceUnit,
   }) async {
@@ -61,6 +63,7 @@ class ProviderServicesController extends StateNotifier<ProviderServicesState> {
       await api.createProviderService(
         categoryId: categoryId,
         name: name,
+        description: description,
         basePrice: basePrice,
         priceUnit: priceUnit,
       );
@@ -77,6 +80,7 @@ class ProviderServicesController extends StateNotifier<ProviderServicesState> {
 
   Future<bool> updateService({
     required int serviceId,
+    String? description,
     int? categoryId,
     String? name,
     int? basePrice,
@@ -90,9 +94,36 @@ class ProviderServicesController extends StateNotifier<ProviderServicesState> {
         serviceId: serviceId,
         categoryId: categoryId,
         name: name,
+        description: description,
         basePrice: basePrice,
         priceUnit: priceUnit,
         isActive: isActive,
+      );
+      await refreshProfile();
+      return true;
+    } on DioException catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
+      return false;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> updateProfile({
+    String? businessName,
+    String? description,
+    String? area,
+    String? address,
+  }) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final api = _ref.read(apiServiceProvider);
+      await api.updateProviderProfile(
+        businessName: businessName,
+        description: description,
+        area: area,
+        address: address,
       );
       await refreshProfile();
       return true;
@@ -146,11 +177,36 @@ class ProviderServicesPage extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          profile.businessName,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                profile.businessName,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
+                            ),
+                            IconButton(
+                              tooltip: 'Edit Profil',
+                              icon: const Icon(Icons.edit),
+                              onPressed: () async {
+                                final result = await showDialog<bool>(
+                                  context: context,
+                                  builder: (_) => ProviderProfileDialog(profile: profile),
+                                );
+                                if (result == true) {
+                                  // refresh profile
+                                  await ref.read(providerServicesControllerProvider.notifier).refreshProfile();
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Profil provider berhasil diperbarui')),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         if (profile.description != null && profile.description!.isNotEmpty)
@@ -226,6 +282,7 @@ class ProviderServicesPage extends ConsumerWidget {
         tooltip: 'Tambah Layanan',
         child: const Icon(Icons.add),
       ),
+      
     );
   }
 
@@ -246,6 +303,136 @@ class ProviderServicesPage extends ConsumerWidget {
           Text(value),
         ],
       ),
+    );
+  }
+}
+
+class ProviderProfileDialog extends ConsumerStatefulWidget {
+  final ProviderProfile profile;
+
+  const ProviderProfileDialog({super.key, required this.profile});
+
+  @override
+  ConsumerState<ProviderProfileDialog> createState() => _ProviderProfileDialogState();
+}
+
+class _ProviderProfileDialogState extends ConsumerState<ProviderProfileDialog> {
+  late final TextEditingController _businessNameCtrl;
+  late final TextEditingController _descriptionCtrl;
+  late final TextEditingController _areaCtrl;
+  late final TextEditingController _addressCtrl;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _businessNameCtrl = TextEditingController(text: widget.profile.businessName);
+    _descriptionCtrl = TextEditingController(text: widget.profile.description ?? '');
+    _areaCtrl = TextEditingController(text: widget.profile.area ?? '');
+    _addressCtrl = TextEditingController(text: widget.profile.address ?? '');
+  }
+
+  @override
+  void dispose() {
+    _businessNameCtrl.dispose();
+    _descriptionCtrl.dispose();
+    _areaCtrl.dispose();
+    _addressCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveProfile() async {
+    setState(() => _isSaving = true);
+    final controller = ref.read(providerServicesControllerProvider.notifier);
+    final success = await controller.updateProfile(
+      businessName: _businessNameCtrl.text.trim(),
+      description: _descriptionCtrl.text.trim().isEmpty ? null : _descriptionCtrl.text.trim(),
+      area: _areaCtrl.text.trim().isEmpty ? null : _areaCtrl.text.trim(),
+      address: _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
+    );
+    setState(() => _isSaving = false);
+    if (success && mounted) {
+      // Invalidate provider detail cache so other pages reflect the update
+      try {
+        ref.invalidate(providerDetailProvider(widget.profile.id));
+      } catch (_) {}
+      Navigator.of(context).pop(true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edit Profil Provider'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _businessNameCtrl,
+            decoration: InputDecoration(
+              labelText: 'Nama Usaha',
+              filled: true,
+              fillColor: Colors.grey.shade100,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _descriptionCtrl,
+            decoration: InputDecoration(
+              labelText: 'Deskripsi',
+              filled: true,
+              fillColor: Colors.grey.shade100,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            minLines: 2,
+            maxLines: 4,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _areaCtrl,
+            decoration: InputDecoration(
+              labelText: 'Area',
+              filled: true,
+              fillColor: Colors.grey.shade100,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _addressCtrl,
+            decoration: InputDecoration(
+              labelText: 'Alamat',
+              filled: true,
+              fillColor: Colors.grey.shade100,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: _isSaving ? null : _saveProfile,
+          child: _isSaving ? const CircularProgressIndicator() : const Text('Simpan'),
+        ),
+      ],
     );
   }
 }
