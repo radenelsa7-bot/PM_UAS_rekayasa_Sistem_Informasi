@@ -7,6 +7,7 @@ use App\Http\Requests\Order\CompleteOrderRequest;
 use App\Http\Requests\Order\CreateOrderRequest;
 use App\Http\Requests\Order\RespondToOrderRequest;
 use App\Models\Order;
+use App\Models\OrderAttachment;
 use App\Models\OrderStatusLog;
 use App\Models\Payment;
 use App\Models\User;
@@ -91,6 +92,23 @@ class OrderController extends Controller
                     'status' => 'UNPAID',
                 ]);
 
+                foreach (($validated['attachment_urls'] ?? []) as $url) {
+                    OrderAttachment::create([
+                        'order_id' => $order->id,
+                        'file_url' => $url,
+                        'file_type' => 'damage_photo_url',
+                    ]);
+                }
+
+                foreach (($validated['damage_photos'] ?? []) as $photo) {
+                    $path = $photo->store('order-damage-photos', 'public');
+                    OrderAttachment::create([
+                        'order_id' => $order->id,
+                        'file_url' => $path,
+                        'file_type' => 'damage_photo',
+                    ]);
+                }
+
                 OrderStatusLog::create([
                     'order_id' => $order->id,
                     'old_status' => null,
@@ -131,7 +149,7 @@ class OrderController extends Controller
      */
     public function getOrder($orderId)
     {
-        $order = Order::with(['customer', 'provider', 'payments', 'statusLogs'])
+        $order = Order::with(['customer', 'provider', 'payments', 'statusLogs', 'attachments', 'finalPriceApproval'])
             ->find($orderId);
 
         if (!$order) {
@@ -151,11 +169,13 @@ class OrderController extends Controller
         if ($user->role === 'CUSTOMER') {
             $orders = Order::where('customer_id', $user->id)
                 ->with(['provider', 'payments'])
+                ->with('finalPriceApproval')
                 ->latest()
                 ->get();
         } elseif ($user->role === 'PROVIDER') {
             $orders = Order::where('provider_id', $user->id)
                 ->with(['customer', 'payments'])
+                ->with('finalPriceApproval')
                 ->latest()
                 ->get();
         } else {
@@ -359,7 +379,12 @@ class OrderController extends Controller
                     ]
                 );
 
-
+                \App\Models\FinalPriceLog::create([
+                    'order_id' => $order->id,
+                    'proposed_final_price' => $validated['final_price'],
+                    'action' => 'SUBMIT',
+                    'submitted_by' => $user->id,
+                ]);
 
                 $dpPayment = $order->payments()->where('payment_type', 'DP')->first();
                 $dpAmount = $dpPayment?->amount ?? 0;

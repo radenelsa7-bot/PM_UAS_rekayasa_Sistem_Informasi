@@ -28,6 +28,10 @@ class CreateOrderRequest extends FormRequest
             'address' => 'required|string|max:500',
             'notes' => 'nullable|string|max:1000',
             'estimated_price' => 'required|integer|min:1|max:100000000',
+            'attachment_urls' => 'nullable|array|max:5',
+            'attachment_urls.*' => 'required|url|max:2048',
+            'damage_photos' => 'nullable|array|max:5',
+            'damage_photos.*' => 'image|mimes:jpg,jpeg,png|max:4096',
         ];
     }
 

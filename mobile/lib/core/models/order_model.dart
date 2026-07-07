@@ -8,6 +8,7 @@ class OrderData {
   final String? notes;
   final String scheduleAt;
   final List<PaymentData> payments;
+  final String? finalPriceApprovalStatus;
 
   OrderData({
     required this.id,
@@ -19,6 +20,7 @@ class OrderData {
     this.notes,
     required this.scheduleAt,
     required this.payments,
+    this.finalPriceApprovalStatus,
   });
 
   factory OrderData.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,9 @@ class OrderData {
               ?.map((item) => PaymentData.fromJson(item))
               .toList() ??
           [],
+      finalPriceApprovalStatus: json['final_price_approval'] is Map
+          ? json['final_price_approval']['approval_status']?.toString()
+          : null,
     );
   }
 }
@@ -92,26 +97,34 @@ class CreateOrderRequest {
   final int providerId;
   final int? categoryId;
   final int? providerServiceId;
+  final int kotaId;
+  final int kecamatanId;
   final String scheduleAt;
   final String address;
   final String? notes;
   final int? estimatedPrice;
   final List<String>? attachmentUrls;
+  final List<String>? attachmentPaths;
 
   CreateOrderRequest({
     required this.providerId,
     this.categoryId,
     this.providerServiceId,
+    required this.kotaId,
+    required this.kecamatanId,
     required this.scheduleAt,
     required this.address,
     this.notes,
     this.estimatedPrice,
     this.attachmentUrls,
+    this.attachmentPaths,
   });
 
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{
       'provider_id': providerId,
+      'kota_id': kotaId,
+      'kecamatan_id': kecamatanId,
       'schedule_at': scheduleAt,
       'address': address,
     };
