@@ -132,6 +132,34 @@ class ApiService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getKota() async {
+    try {
+      final response = await dio.get('/api/catalog/wilayah/kota');
+      final data = response.data['data'];
+      if (data is List) {
+        return data.map((item) => Map<String, dynamic>.from(item)).toList();
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getKecamatan(int kotaId) async {
+    try {
+      final response = await dio.get(
+        '/api/catalog/wilayah/kota/$kotaId/kecamatan',
+      );
+      final data = response.data['data'];
+      if (data is List) {
+        return data.map((item) => Map<String, dynamic>.from(item)).toList();
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<ProvidersResponse> getProvidersByCategory(int categoryId) async {
     try {
       final response = await dio.get(
@@ -174,7 +202,21 @@ class ApiService {
 
   Future<OrderData> createOrder(CreateOrderRequest request) async {
     try {
-      final response = await dio.post('/api/orders', data: request.toJson());
+      final Object payload;
+      if (request.attachmentPaths != null &&
+          request.attachmentPaths!.isNotEmpty) {
+        final form = FormData.fromMap(request.toJson());
+        for (final path in request.attachmentPaths!) {
+          form.files.add(
+            MapEntry('damage_photos[]', await MultipartFile.fromFile(path)),
+          );
+        }
+        payload = form;
+      } else {
+        payload = request.toJson();
+      }
+
+      final response = await dio.post('/api/orders', data: payload);
       return OrderData.fromJson(response.data['data']);
     } catch (e) {
       rethrow;
@@ -355,6 +397,24 @@ class ApiService {
       await dio.post(
         '/api/orders/$orderId/complete',
         data: {'final_price': finalPrice},
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> decideFinalPrice({
+    required int orderId,
+    required String action,
+    String? reason,
+  }) async {
+    try {
+      await dio.post(
+        '/api/orders/$orderId/final-price/approve',
+        data: {
+          'action': action,
+          if (reason != null && reason.isNotEmpty) 'reason': reason,
+        },
       );
     } catch (e) {
       rethrow;

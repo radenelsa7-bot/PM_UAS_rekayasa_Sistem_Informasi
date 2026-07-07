@@ -76,38 +76,25 @@ class PaymentStepFlowTest extends TestCase
             'is_verified' => true,
         ]);
 
-        $service = ProviderService::create([
+        $service = ProviderService::factory()->create([
             'provider_profile_id' => $profile->id,
             'category_id' => $category->id,
-            'name' => 'Service Test',
-            'base_price' => 10000,
-            'price_unit' => 'per_job',
-            'is_active' => true,
         ]);
 
-        ProviderCoverage::create([
+        ProviderCoverage::factory()->create([
             'provider_profile_id' => $profile->id,
             'kecamatan_id' => $kecamatan,
-            'is_active' => true,
         ]);
-
-        // --- auth: jalankan via API (auth:sanctum) pakai token ---
-        $customerToken = $customer->createToken('test')->plainTextToken;
-        $providerToken = $provider->createToken('test')->plainTextToken;
 
         // sanity check role
         $this->assertSame('PROVIDER', $provider->fresh()->role);
 
         // /api/user returns currently authenticated user (sanctum)
 
-
-
-
-
         // 1) customer create order
         $estimated = 200000;
 
-        $createResp = $this->withHeader('Authorization', 'Bearer ' . $customerToken)
+        $createResp = $this->actingAs($customer, 'sanctum')
             ->postJson('/api/orders', [
                 'provider_id' => $provider->id,
                 'category_id' => $category->id,
@@ -133,20 +120,11 @@ class PaymentStepFlowTest extends TestCase
 
         // 2) provider accept order
 
-
-        $acceptResp = $this->withHeader('Authorization', 'Bearer ' . $providerToken)
+        $acceptResp = $this->actingAs($provider, 'sanctum')
             ->postJson('/api/orders/' . $orderId . '/respond', [
-
                 'action' => 'accept',
                 'reason' => 'ok',
             ]);
-
-        if ($acceptResp->status() !== 200) {
-            // Helpful output to identify whether 403 comes from middleware/authorize/auth:sanctum.
-            fwrite(STDERR, "\n[DEBUG] acceptResp status={$acceptResp->status()}\n");
-            $content = $acceptResp->getContent();
-            fwrite(STDERR, "[DEBUG] acceptResp content={$content}\n\n");
-        }
         $acceptResp->assertStatus(200);
 
         $order->refresh();
@@ -159,7 +137,7 @@ class PaymentStepFlowTest extends TestCase
             'external_payment_id' => $dpPayment->external_payment_id ?: 'PAY-DP-' . $dpPayment->id,
         ]);
 
-        $dpConfirmResp = $this->withHeader('Authorization', 'Bearer ' . $customerToken)
+        $dpConfirmResp = $this->actingAs($customer, 'sanctum')
             ->postJson('/api/payments/' . $dpPayment->id . '/confirm', []);
         $dpConfirmResp->assertStatus(200);
 
@@ -167,7 +145,7 @@ class PaymentStepFlowTest extends TestCase
         // order masih CREATED/ACCEPTED sampai provider startWork; startWork yang mengubah IN_PROGRESS
 
         // 4) provider startWork
-        $startResp = $this->withHeader('Authorization', 'Bearer ' . $providerToken)
+        $startResp = $this->actingAs($provider, 'sanctum')
             ->postJson('/api/orders/' . $orderId . '/start-work', []);
         $startResp->assertStatus(200);
 
@@ -176,7 +154,7 @@ class PaymentStepFlowTest extends TestCase
 
         // 5) provider complete order (final_price >= estimated)
         $finalPrice = 240000;
-        $completeResp = $this->withHeader('Authorization', 'Bearer ' . $providerToken)
+        $completeResp = $this->actingAs($provider, 'sanctum')
             ->postJson('/api/orders/' . $orderId . '/complete', [
                 'final_price' => $finalPrice,
                 'notes' => 'done',
@@ -191,7 +169,7 @@ class PaymentStepFlowTest extends TestCase
         $this->assertSame('PENDING', $approval->approval_status);
 
         // 6) customer approve final
-        $approveResp = $this->withHeader('Authorization', 'Bearer ' . $customerToken)
+        $approveResp = $this->actingAs($customer, 'sanctum')
             ->postJson('/api/orders/' . $orderId . '/final-price/approve', [
                 'action' => 'approve',
             ]);
@@ -206,7 +184,7 @@ class PaymentStepFlowTest extends TestCase
 
         // 7) customer confirm FINAL -> CLOSED
         $finalPayment->refresh();
-        $finalConfirmResp = $this->withHeader('Authorization', 'Bearer ' . $customerToken)
+        $finalConfirmResp = $this->actingAs($customer, 'sanctum')
             ->postJson('/api/payments/' . $finalPayment->id . '/confirm', []);
         $finalConfirmResp->assertStatus(200);
 
@@ -217,4 +195,3 @@ class PaymentStepFlowTest extends TestCase
         $this->assertSame('PAID', $finalPayment->status);
     }
 }
-
