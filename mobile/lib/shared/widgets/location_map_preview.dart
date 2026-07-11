@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'google_maps_preview.dart';
 
+
 class LocationMapPreview extends StatelessWidget {
   final double? customerLatitude;
   final double? customerLongitude;
