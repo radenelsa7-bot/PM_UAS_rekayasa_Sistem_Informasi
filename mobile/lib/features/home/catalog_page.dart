@@ -65,6 +65,7 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
   final _searchCtrl = TextEditingController();
   TabController? _tabController;
   bool _showFooter = false;
+
   List<Map<String, dynamic>> _kotaList = [];
   List<Map<String, dynamic>> _kecamatanList = [];
   int? _selectedKotaId;
@@ -206,10 +207,8 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Hero Banner ──────────────────────────────────────────────────
             _buildHeroBanner(context),
 
-            // ── Search Bar ──────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Container(
@@ -245,90 +244,67 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
               child: _buildLocationFilters(context),
             ),
             _buildSectionHeader(context, 'Langkah Mudah', null),
+
+            // Refactor: GridView agar 3 kartu berjajar rapi horizontal
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  if (constraints.maxWidth < 380) {
-                    return Column(
-                      children: [
-                        _buildStepCard(
+              child: SizedBox(
+                height: 132,
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 3,
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.0,
+                  ),
+                  itemBuilder: (context, index) {
+                    switch (index) {
+                      case 0:
+                        return _buildStepCard(
                           context,
                           '1',
                           'Pilih\nLayanan',
                           Icons.category_rounded,
                           const Color(0xFF2196F3),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildStepCard(
+                        );
+                      case 1:
+                        return _buildStepCard(
                           context,
                           '2',
                           'Pilih\nProvider',
                           Icons.person_search_rounded,
                           const Color(0xFFFF6B35),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildStepCard(
+                        );
+                      default:
+                        return _buildStepCard(
                           context,
                           '3',
                           'Buat\nOrder',
                           Icons.receipt_long_rounded,
                           const Color(0xFF4CAF50),
-                        ),
-                      ],
-                    );
-                  }
-
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: _buildStepCard(
-                          context,
-                          '1',
-                          'Pilih\nLayanan',
-                          Icons.category_rounded,
-                          const Color(0xFF2196F3),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildStepCard(
-                          context,
-                          '2',
-                          'Pilih\nProvider',
-                          Icons.person_search_rounded,
-                          const Color(0xFFFF6B35),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildStepCard(
-                          context,
-                          '3',
-                          'Buat\nOrder',
-                          Icons.receipt_long_rounded,
-                          const Color(0xFF4CAF50),
-                        ),
-                      ),
-                    ],
-                  );
-                },
+                        );
+                    }
+                  },
+                ),
               ),
             ),
 
-            // ── Kategori Layanan ─────────────────────────────────────────────
             _buildSectionHeader(context, 'Kategori Layanan', null),
             _buildCategories(context, ref, selectedCategory),
 
-            // ── Provider List ────────────────────────────────────────────────
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: searchQuery.isNotEmpty
                   ? _buildSearchResults(context, ref)
                   : selectedCategory != null
-                  ? _buildProvidersByCategory(context, ref, selectedCategory)
-                  : _buildSuggestedProviders(context, ref),
+                      ? _buildProvidersByCategory(
+                          context, ref, selectedCategory)
+                      : _buildSuggestedProviders(context, ref),
             ),
 
             const SizedBox(height: 24),
@@ -360,9 +336,9 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
         children: [
           Text(
             'Filter Wilayah',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<int?>(
@@ -544,9 +520,8 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
                               borderRadius: BorderRadius.circular(18),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppTheme.orange.withValues(
-                                    alpha: 0.40,
-                                  ),
+                                  color: AppTheme.orange
+                                      .withValues(alpha: 0.40),
                                   blurRadius: 16,
                                   offset: const Offset(0, 6),
                                 ),
@@ -608,9 +583,8 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppTheme.orange.withValues(
-                                    alpha: 0.40,
-                                  ),
+                                  color: AppTheme.orange
+                                      .withValues(alpha: 0.40),
                                   blurRadius: 16,
                                   offset: const Offset(0, 6),
                                 ),
@@ -629,9 +603,9 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
                     Text(
                       'Temukan teknisi terdekat dengan cepat dan aman. Pesan & pantau langsung dari aplikasi.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.80),
-                        height: 1.6,
-                      ),
+                            color: Colors.white.withValues(alpha: 0.80),
+                            height: 1.6,
+                          ),
                     ),
                     const SizedBox(height: 18),
                     Wrap(
@@ -683,7 +657,6 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
     );
   }
 
-  // ─── Section Header ───────────────────────────────────────────────────────
   Widget _buildSectionHeader(
     BuildContext context,
     String title,
@@ -697,9 +670,9 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
           Text(
             title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.3,
-            ),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                ),
           ),
           if (action != null)
             Container(
@@ -722,7 +695,6 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
     );
   }
 
-  // ─── Step Card ────────────────────────────────────────────────────────────
   Widget _buildStepCard(
     BuildContext context,
     String step,
@@ -763,9 +735,9 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              height: 1.3,
-            ),
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                ),
           ),
         ],
       ),
@@ -802,7 +774,6 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
 
               return GestureDetector(
                 onTap: () {
-                  // Clear any active search query when selecting a category
                   ref.read(searchQueryProvider.notifier).state = '';
                   ref.read(selectedCategoryProvider.notifier).state = isSelected
                       ? null
@@ -875,7 +846,6 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
     );
   }
 
-  // ─── Suggested Providers ─────────────────────────────────────────────────
   Widget _buildSuggestedProviders(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(categoriesProvider);
 
@@ -917,16 +887,15 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
           child: Text(
             label,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
           ),
         ),
       ],
     );
   }
 
-  // ─── Providers By Category ───────────────────────────────────────────────
   Widget _buildProvidersByCategory(
     BuildContext context,
     WidgetRef ref,
@@ -946,16 +915,12 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, st) => Center(child: Text('Error: $err')),
       data: (providers) {
-        // Safety filter: hanya tampilkan provider dengan user status ACTIVE
         final activeProviders = providers
             .where((p) => p.userStatus == 'ACTIVE')
             .toList();
 
         if (activeProviders.isEmpty) {
-          return _buildEmptyState(
-            context,
-            'Tidak ada provider di kategori ini',
-          );
+          return _buildEmptyState(context, 'Tidak ada provider di kategori ini');
         }
 
         return Column(
@@ -978,7 +943,6 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
     );
   }
 
-  // ─── Search Results ──────────────────────────────────────────────────────
   Widget _buildSearchResults(BuildContext context, WidgetRef ref) {
     final searchQuery = ref.watch(searchQueryProvider);
     final resultsAsync = ref.watch(
@@ -995,7 +959,6 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, st) => Center(child: Text('Error: $err')),
       data: (providers) {
-        // Safety filter: hanya tampilkan provider dengan user status ACTIVE
         final activeProviders = providers
             .where((p) => p.userStatus == 'ACTIVE')
             .toList();
@@ -1045,7 +1008,6 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
     );
   }
 
-  // ─── Provider Card ────────────────────────────────────────────────────────
   Widget _buildProviderCard(
     BuildContext context,
     dynamic provider,
@@ -1136,8 +1098,7 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      provider.description ??
-                                          'Belum ada deskripsi',
+                                      provider.description ?? 'Belum ada deskripsi',
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
@@ -1197,9 +1158,7 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
                                 child: Text(
                                   isBusy ? 'Sedang dipesan' : 'Tersedia',
                                   style: TextStyle(
-                                    color: isBusy
-                                        ? Colors.orange
-                                        : Colors.green,
+                                    color: isBusy ? Colors.orange : Colors.green,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -1283,9 +1242,7 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.amber.withValues(
-                                          alpha: 0.12,
-                                        ),
+                                        color: Colors.amber.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Row(
@@ -1314,19 +1271,14 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color:
-                                            (isBusy
-                                                    ? Colors.orange
-                                                    : Colors.green)
-                                                .withValues(alpha: 0.10),
+                                        color: (isBusy ? Colors.orange : Colors.green)
+                                            .withValues(alpha: 0.10),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
                                         isBusy ? 'Sedang dipesan' : 'Tersedia',
                                         style: TextStyle(
-                                          color: isBusy
-                                              ? Colors.orange
-                                              : Colors.green,
+                                          color: isBusy ? Colors.orange : Colors.green,
                                           fontSize: 11,
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -1375,3 +1327,4 @@ class _CatalogFooter extends StatelessWidget {
     );
   }
 }
+

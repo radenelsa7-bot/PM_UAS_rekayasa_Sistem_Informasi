@@ -14,7 +14,10 @@ import '../../core/models/order_model.dart';
 import '../../core/models/provider_model.dart';
 import '../../app/theme/app_theme.dart';
 import '../auth/auth_controller.dart';
-import '../maps/location_picker_screen.dart';
+import '../maps/location_picker_screen.dart' show LocationPickerScreen;
+
+
+
 import 'my_orders_page.dart';
 import 'order_providers.dart';
 
@@ -661,18 +664,18 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    OutlinedButton.icon(
+        OutlinedButton.icon(
                       onPressed: () async {
-                        final result = await Navigator.of(context)
-                            .push<LocationResult>(
-                              MaterialPageRoute(
-                                builder: (_) => const LocationPickerScreen(),
-                              ),
-                            );
+                        final result = await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const LocationPickerScreen(),
+                          ),
+                        );
                         if (result != null && mounted) {
                           _addressCtrl.text = result.address;
                         }
                       },
+
                       icon: const Icon(Icons.map_rounded, size: 18),
                       label: const Text('Pilih Lewat Google Maps'),
                       style: OutlinedButton.styleFrom(
