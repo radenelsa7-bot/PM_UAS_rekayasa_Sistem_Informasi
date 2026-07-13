@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../app/theme/app_theme.dart';
 import '../../core/services/api_service.dart';
 import '../auth/auth_controller.dart';
 import '../auth/login_page.dart';
 import 'admin_providers_page.dart';
 import 'admin_categories_page.dart';
-import 'admin_users_page.dart';
 import 'admin_orders_page.dart';
-import 'admin_transactions_page.dart';
+import 'admin_providers_page.dart';
 import 'admin_reports_page.dart';
+import 'admin_transactions_page.dart';
+import 'admin_users_page.dart';
 
-final adminDashboardProvider = FutureProvider<Map<String, dynamic>>((
-  ref,
-) async {
+final adminDashboardProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final api = ref.read(apiServiceProvider);
   return api.getAdminDashboard();
 });
@@ -40,12 +40,37 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
     final isWide = MediaQuery.of(context).size.width > 800;
 
     return Scaffold(
       backgroundColor: AppTheme.cream,
+      appBar: _buildAppBar(context),
+      backgroundColor: AppTheme.navyLight,
       body: isWide ? _buildWideLayout() : _buildNarrowLayout(),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      title: const Text('Admin Dashboard'),
+      elevation: 0,
+      backgroundColor: AppTheme.navy,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.logout_rounded),
+          tooltip: 'Logout',
+          onPressed: () => _onLogout(context),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _onLogout(BuildContext context) async {
+    await ref.read(authControllerProvider.notifier).logout();
+    if (!context.mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
     );
   }
 
@@ -54,7 +79,11 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       children: [
         _buildSidebar(),
         Expanded(
-          child: Column(children: [Expanded(child: _buildContent())]),
+          child: Column(
+            children: [
+              Expanded(child: _buildContent()),
+            ],
+          ),
         ),
       ],
     );
@@ -83,24 +112,27 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             final i = entry.key;
             final item = entry.value;
             final isSelected = _selectedIndex == i;
+
             return Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: () => setState(() => _selectedIndex = i),
+                splashColor: AppTheme.orange.withValues(alpha: 0.35),
+                highlightColor: AppTheme.orange.withValues(alpha: 0.18),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
+                    color:
+                        isSelected ? AppTheme.orange.withValues(alpha: 0.15) : null,
                     color: isSelected
                         ? AppTheme.orange.withValues(alpha: 0.15)
                         : null,
                     border: Border(
                       left: BorderSide(
-                        color: isSelected
-                            ? AppTheme.orange
-                            : Colors.transparent,
+                        color: isSelected ? AppTheme.orange : Colors.transparent,
                         width: 3,
                       ),
                     ),
@@ -117,9 +149,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                         item.label,
                         style: TextStyle(
                           color: isSelected ? AppTheme.orange : Colors.white70,
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.normal,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.normal,
                           fontSize: 14,
                         ),
                       ),
@@ -136,17 +167,17 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   Widget _buildHorizontalNav() {
     return Container(
-      height: 56,
+      height: 62,
       color: AppTheme.navyLight,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: _menuItems.length,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         itemBuilder: (context, i) {
           final item = _menuItems[i];
           final isSelected = _selectedIndex == i;
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: ChoiceChip(
               label: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -154,21 +185,22 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                   Icon(
                     item.icon,
                     size: 16,
-                    color: isSelected ? Colors.white : Colors.white60,
+                    color: isSelected ? Colors.white : Colors.white70,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 6),
                   Text(
                     item.label,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white60,
-                      fontSize: 12,
+                      color: isSelected ? Colors.white : Colors.white70,
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     ),
                   ),
                 ],
               ),
               selected: isSelected,
               selectedColor: AppTheme.orange,
-              backgroundColor: Colors.transparent,
+              backgroundColor: AppTheme.navy.withOpacity(0.18),
               side: BorderSide.none,
               onSelected: (_) => setState(() => _selectedIndex = i),
             ),
@@ -342,9 +374,9 @@ class _DashboardOverview extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 900
-            ? 4
-            : (constraints.maxWidth > 600 ? 3 : 2);
+        final crossAxisCount =
+            constraints.maxWidth > 900 ? 4 : (constraints.maxWidth > 600 ? 3 : 2);
+
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -370,6 +402,7 @@ class _DashboardOverview extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
+                      color: item.color.withValues(alpha: 0.1),
                       color: item.color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -421,6 +454,7 @@ class _DashboardOverview extends ConsumerWidget {
         ),
       );
     }
+
     return Card(
       margin: EdgeInsets.zero,
       child: ListView.separated(
@@ -467,6 +501,7 @@ class _DashboardOverview extends ConsumerWidget {
         ),
       );
     }
+
     return Card(
       margin: EdgeInsets.zero,
       child: ListView.separated(
@@ -480,6 +515,7 @@ class _DashboardOverview extends ConsumerWidget {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
+                color: AppTheme.success.withValues(alpha: 0.1),
                 color: AppTheme.success.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -519,10 +555,12 @@ class _DashboardOverview extends ConsumerWidget {
       'CLOSED': (Icons.lock, AppTheme.grey600),
       'CANCELLED': (Icons.cancel, AppTheme.danger),
     };
+
     final entry = map[status] ?? (Icons.help, AppTheme.grey400);
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
+        color: entry.$2.withValues(alpha: 0.1),
         color: entry.$2.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -539,10 +577,12 @@ class _DashboardOverview extends ConsumerWidget {
       'CLOSED': AppTheme.grey600,
       'CANCELLED': AppTheme.danger,
     };
+
     final color = colorMap[status] ?? AppTheme.grey400;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -572,5 +612,7 @@ class _StatItem {
   final String value;
   final IconData icon;
   final Color color;
+
   const _StatItem(this.label, this.value, this.icon, this.color);
 }
+
