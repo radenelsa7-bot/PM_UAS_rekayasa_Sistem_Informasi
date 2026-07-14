@@ -226,7 +226,7 @@ class MyOrdersPage extends ConsumerWidget {
                                     vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.orange.withOpacity(0.1),
+                                    color: AppTheme.orange.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(
