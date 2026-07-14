@@ -903,9 +903,9 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.danger.withOpacity(0.1),
+                  color: AppTheme.danger.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.danger.withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.danger.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -1039,6 +1039,56 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                 onPressed: actionState.isLoading
                     ? null
                     : () => _showFinalPriceDialog(context, ref, order),
+              ),
+            ),
+          ],
+          // FIX: Handle price rejection for provider - allow resubmit of final price
+          if (order.status == 'COMPLETED' && order.finalPriceApprovalStatus == 'REJECTED') ...[
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.warning.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.info_outline, color: AppTheme.warning, size: 20),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Harga final sebelumnya ditolak customer. Silakan ajukan harga baru.',
+                            style: TextStyle(color: AppTheme.warning, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.edit, size: 18),
+                      label: const Text('Input Harga Final Baru'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.orange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: actionState.isLoading
+                          ? null
+                          : () => _showFinalPriceDialog(context, ref, order),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
