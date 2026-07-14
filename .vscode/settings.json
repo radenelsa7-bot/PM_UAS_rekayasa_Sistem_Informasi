@@ -1,5 +1,8 @@
 {
   "cmake.ignoreCMakeListsMissing": true,
   "geminicodeassist.outlines.automaticOutlineGeneration": true,
-  "java.configuration.updateBuildConfiguration": "interactive"
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "avdmanager.executable": "c:\\Users\\Hype\\AppData\\Local\\Android\\Sdk\\cmdline-tools\\latest-2\\bin\\avdmanager.bat",
+  "dart.flutterSdkPath": "C:\\Users\\Hype\\flutter",
+  "dart.dartSdkPath": "C:\\Users\\Hype\\flutter\\bin\\cache\\dart-sdk"
 }
