@@ -2,37 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/app_theme.dart';
 import '../../config/api_config.dart';
+import '../../shared/widgets/site_footer.dart';
+import '../../shared/widgets/site_header.dart';
 import '../auth/auth_controller.dart';
 import '../auth/login_page.dart';
-import '../auth/provider_approval_guard.dart';
 import '../admin/admin_dashboard_page.dart';
 import 'catalog_page.dart';
 import 'my_orders_page.dart';
 import 'provider_services_page.dart';
-import 'provider_dashboard_page.dart';
 import 'edit_profile_dialog.dart';
 
-class HomePage extends ConsumerStatefulWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  ConsumerState<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends ConsumerState<HomePage> {
-  int _selectedIndex = 0;
-
-  static const List<BottomNavigationBarItem> _customerBottomItems = [
-    BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Beranda'),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.receipt_long_rounded),
-      label: 'Pesanan',
-    ),
-    BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Akun'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(authControllerProvider);
 
     // Admin gets full dashboard
@@ -40,43 +24,80 @@ class _HomePageState extends ConsumerState<HomePage> {
       return const AdminDashboardPage();
     }
 
-    final isProvider = state.userRole == 'PROVIDER';
-    final bottomItems = _customerBottomItems;
-    final pages = isProvider
-        ? <Widget>[
-            ProviderDashboardPage(
-              onOpenOrders: () => setState(() => _selectedIndex = 1),
-              onOpenAccount: () => setState(() => _selectedIndex = 2),
-            ),
-            const MyOrdersPage(),
-            _buildAccountTab(context, ref, state),
-          ]
-        : <Widget>[
-            const CatalogPage(),
-            const MyOrdersPage(),
-            _buildAccountTab(context, ref, state),
-          ];
+    final tabs = [
+      const Tab(icon: Icon(Icons.home_rounded), text: 'Beranda'),
+      const Tab(icon: Icon(Icons.receipt_long_rounded), text: 'Pesanan'),
+      const Tab(icon: Icon(Icons.person_rounded), text: 'Akun'),
+    ];
+    final pages = [
+      const CatalogPage(),
+      const MyOrdersPage(),
+      _buildAccountTab(context, ref, state),
+    ];
 
-    final scaffold = Scaffold(
-      backgroundColor: AppTheme.cream,
-      body: SafeArea(bottom: false, child: pages[_selectedIndex]),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: bottomItems,
-        selectedItemColor: AppTheme.orange,
-        unselectedItemColor: AppTheme.grey600,
-        backgroundColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
+    return DefaultTabController(
+      length: tabs.length,
+      child: Scaffold(
+        backgroundColor: AppTheme.cream,
+        appBar: TukangDekatHeader(
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppTheme.orange.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.handyman,
+                  size: 20,
+                  color: AppTheme.orange,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'TukangDekat',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+            ],
+          ),
+          bottom: TabBar(
+            tabs: tabs,
+            indicatorColor: AppTheme.orange,
+            indicatorWeight: 3,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white60,
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+          actions: [
+            Container(
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: IconButton(
+                tooltip: 'Logout',
+                onPressed: () async {
+                  await ref.read(authControllerProvider.notifier).logout();
+                  if (!context.mounted) return;
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginPage()),
+                    (_) => false,
+                  );
+                },
+                icon: const Icon(Icons.logout_rounded, size: 20),
+              ),
+            ),
+          ],
+        ),
+        body: TabBarView(children: pages),
+        bottomNavigationBar: const TukangDekatFooter(),
       ),
     );
-
-    return isProvider
-        ? ProviderApprovalGuard(
-            providerStatus: state.providerStatus,
-            child: scaffold,
-          )
-        : scaffold;
   }
 
   Widget _buildAccountTab(BuildContext context, WidgetRef ref, dynamic state) {
@@ -85,10 +106,11 @@ class _HomePageState extends ConsumerState<HomePage> {
         : state.userEmail ?? 'N/A';
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -98,13 +120,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.navy.withValues(alpha: 0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.navy.withOpacity(0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -122,14 +144,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             '${ApiConfig.baseUrl}/api/storage/${state.userProfilePhotoPath}',
                           )
                         : null,
-                    // Fix crash: CircleAvatar mensyaratkan salah satu dari:
-                    // - backgroundImage != null
-                    // - onBackgroundImageError == null
-                    onBackgroundImageError: (state.userProfilePhotoPath != null &&
-                            state.userProfilePhotoPath!.isNotEmpty)
-                        ? (_, _) {}
-                        : null,
-                    child: state.userProfilePhotoPath == null
+                    child: state.userProfilePhotoPath == null || state.userProfilePhotoPath!.isEmpty
                         ? const Icon(
                             Icons.person,
                             size: 36,
@@ -169,7 +184,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.orange.withValues(alpha: 0.2),
+                          color: AppTheme.orange.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -256,21 +271,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                     onTap: null,
                   ),
                 ],
-
-                const Divider(height: 1, indent: 56),
-                _buildMenuTile(
-                  icon: Icons.logout_rounded,
-                  iconColor: AppTheme.danger,
-                  title: 'Logout',
-                  subtitle: 'Keluar dari akun',
-                  onTap: () async {
-                    await ref.read(authControllerProvider.notifier).logout();
-                    if (!context.mounted) return;
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const LoginPage()),
-                    );
-                  },
-                ),
               ],
             ),
           ),
@@ -291,7 +291,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: iconColor.withValues(alpha: 0.1),
+          color: iconColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: iconColor, size: 22),

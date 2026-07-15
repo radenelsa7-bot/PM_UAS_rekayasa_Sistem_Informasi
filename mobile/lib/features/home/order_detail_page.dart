@@ -3,52 +3,28 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
-import 'package:dio/dio.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/theme/app_theme.dart';
 import '../../core/services/api_service.dart';
 import '../../core/models/order_model.dart';
-import '../../shared/widgets/live_tracking_map.dart';
 import '../auth/auth_controller.dart';
+import '../../shared/widgets/site_footer.dart';
+import '../../shared/widgets/site_header.dart';
 import 'order_providers.dart';
 
-class OrderDetailPage extends ConsumerStatefulWidget {
+class OrderDetailPage extends ConsumerWidget {
   final int orderId;
-  final bool autoOpenQris;
-  final int? autoPaymentId;
 
-  const OrderDetailPage({
-    super.key,
-    required this.orderId,
-    this.autoOpenQris = false,
-    this.autoPaymentId,
-  });
+  const OrderDetailPage({super.key, required this.orderId});
 
   @override
-  ConsumerState<OrderDetailPage> createState() => _OrderDetailPageState();
-}
-
-class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
-  bool _autoOpened = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final orderAsync = ref.watch(orderDetailProvider(widget.orderId));
+  Widget build(BuildContext context, WidgetRef ref) {
+    final orderAsync = ref.watch(orderDetailProvider(orderId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Rincian Pesanan'),
-        backgroundColor: AppTheme.navy,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: 'Kembali',
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-      ),
+      appBar: const TukangDekatHeader(title: Text('Detail Order')),
       body: orderAsync.when(
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppTheme.orange),
@@ -62,7 +38,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppTheme.danger.withValues(alpha: 0.1),
+                    color: AppTheme.danger.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -88,48 +64,6 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
           ),
         ),
         data: (order) {
-          // Auto-open QRIS dialog if requested via navigation flags (only once)
-          if (widget.autoOpenQris && !_autoOpened) {
-            _autoOpened = true;
-            WidgetsBinding.instance.addPostFrameCallback((_) async {
-              try {
-                final api = ref.read(apiServiceProvider);
-                if (widget.autoPaymentId != null) {
-                  final q = await api.generateQRIS(widget.autoPaymentId!);
-                  if (context.mounted) {
-                    _showQrisDialog(
-                      context,
-                      ref,
-                      q,
-                      order.id,
-                      widget.autoPaymentId!,
-                    );
-                  }
-                  return;
-                }
-
-                // If no payment id, try to find unpaid payment on order
-                PaymentData? unpaid;
-                if (order.payments.isNotEmpty) {
-                  unpaid = order.payments.firstWhere(
-                    (p) => p.status == 'UNPAID' || p.status == 'PENDING',
-                    orElse: () => order.payments.first,
-                  );
-                } else {
-                  unpaid = null;
-                }
-                if (unpaid != null) {
-                  final q = await api.generateQRIS(unpaid.id);
-                  if (context.mounted) {
-                    _showQrisDialog(context, ref, q, order.id, unpaid.id);
-                  }
-                }
-              } catch (_) {
-                // ignore errors silently
-              }
-            });
-          }
-
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -139,11 +73,6 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                 const SizedBox(height: 16),
                 _buildInfoCard(context, order),
                 const SizedBox(height: 16),
-                _buildTrackingCard(context, order),
-                const SizedBox(height: 16),
-                if (order.attachments.isNotEmpty)
-                  _buildAttachmentsCard(context, order),
-                if (order.attachments.isNotEmpty) const SizedBox(height: 16),
                 _buildPricingCard(context, order),
                 const SizedBox(height: 16),
                 if (order.payments.isNotEmpty)
@@ -160,6 +89,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
           );
         },
       ),
+      bottomNavigationBar: const TukangDekatFooter(),
     );
   }
 
@@ -172,22 +102,19 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            statusColor.withValues(alpha: 0.1),
-            statusColor.withValues(alpha: 0.05),
-          ],
+          colors: [statusColor.withOpacity(0.1), statusColor.withOpacity(0.05)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+        border: Border.all(color: statusColor.withOpacity(0.2)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.15),
+              color: statusColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(statusIcon, color: statusColor, size: 28),
@@ -211,7 +138,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.15),
+                    color: statusColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -256,12 +183,6 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
           ),
           const SizedBox(height: 16),
           _buildInfoRow(Icons.location_on_outlined, 'Alamat', order.address),
-          if (order.providerLatitude != null && order.providerLongitude != null)
-            _buildInfoRow(
-              Icons.person_pin_circle_outlined,
-              'Lokasi Provider',
-              '${order.providerLatitude!.toStringAsFixed(6)}, ${order.providerLongitude!.toStringAsFixed(6)}',
-            ),
           _buildInfoRow(
             Icons.calendar_today_outlined,
             'Jadwal',
@@ -271,53 +192,6 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
           ),
           if (order.notes != null && order.notes!.isNotEmpty)
             _buildInfoRow(Icons.note_outlined, 'Catatan', order.notes!),
-          if (order.damageDescription != null &&
-              order.damageDescription!.isNotEmpty)
-            _buildInfoRow(
-              Icons.build_circle_outlined,
-              'Kondisi',
-              order.damageDescription!,
-            ),
-          if (order.queueNote != null && order.queueNote!.isNotEmpty)
-            _buildInfoRow(Icons.info_outline, 'Info Antrian', order.queueNote!),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTrackingCard(BuildContext context, OrderData order) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.grey200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.map_outlined, size: 18, color: AppTheme.navy),
-              const SizedBox(width: 8),
-              Text(
-                'Tracking Lokasi',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          LiveTrackingMap(
-            orderId: order.id,
-            customerLatitude: order.customerLatitude,
-            customerLongitude: order.customerLongitude,
-            providerLatitude: order.providerLatitude,
-            providerLongitude: order.providerLongitude,
-            providerName: order.providerName,
-            enableAutoRefresh: true,
-          ),
         ],
       ),
     );
@@ -353,105 +227,6 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
         ],
       ),
     );
-  }
-
-  Widget _buildAttachmentsCard(BuildContext context, OrderData order) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.grey200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.image_outlined, size: 18, color: AppTheme.navy),
-              const SizedBox(width: 8),
-              Text(
-                'Foto Pesanan',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 100,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: order.attachments.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final att = order.attachments[index];
-                final url = att.publicUrl ?? att.fileUrl ?? '';
-                if (url.isEmpty) return const SizedBox.shrink();
-                return GestureDetector(
-                  onTap: () async {
-                    if (await canLaunch(url)) {
-                      await launch(url);
-                    }
-                  },
-                  child: SizedBox(
-                    width: 120,
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              url,
-                              width: 120,
-                              height: 76,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) => Container(
-                                width: 120,
-                                height: 76,
-                                color: AppTheme.grey100,
-                                child: const Icon(
-                                  Icons.broken_image,
-                                  color: AppTheme.grey600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _attachmentPurposeLabel(att.purpose),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: AppTheme.grey600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _attachmentPurposeLabel(String? purpose) {
-    switch (purpose) {
-      case 'PROVIDER_INITIAL':
-        return 'Kondisi awal';
-      case 'PROVIDER_FINAL':
-        return 'Kondisi akhir';
-      case 'PROVIDER_RECEIPT':
-        return 'Kuitansi';
-      default:
-        return 'Kerusakan';
-    }
   }
 
   Widget _buildPricingCard(BuildContext context, OrderData order) {
@@ -501,25 +276,6 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
               ),
             ],
           ),
-          if (order.estimatedPriceMin != null &&
-              order.estimatedPriceMax != null) ...[
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Range kondisi',
-                    style: TextStyle(color: AppTheme.grey600),
-                  ),
-                ),
-                Text(
-                  '${currencyFormat.format(order.estimatedPriceMin)} - ${currencyFormat.format(order.estimatedPriceMax)}',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ],
           if (order.finalPrice != null) ...[
             const SizedBox(height: 10),
             const Divider(),
@@ -597,9 +353,9 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.05),
+                color: statusColor.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+                border: Border.all(color: statusColor.withOpacity(0.2)),
               ),
               child: Column(
                 children: [
@@ -611,7 +367,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                           Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.15),
+                              color: statusColor.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -659,13 +415,10 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                       ),
                     ],
                   ),
-                  // FIX: Show payment button for unpaid final payments when order is COMPLETED
-                  // and final price is approved (for CUSTOMER) or when payment is UNPAID/PENDING
                   if (!isPaid &&
                       (payment.status == 'UNPAID' ||
                           payment.status == 'PENDING') &&
-                      (order.status != 'CANCELLED' &&
-                          order.status != 'CLOSED')) ...[
+                      !['CANCELLED', 'CLOSED'].contains(order.status)) ...[
                     const SizedBox(height: 12),
                     Builder(
                       builder: (ctx) {
@@ -675,11 +428,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                             width: double.infinity,
                             child: ElevatedButton.icon(
                               icon: const Icon(Icons.qr_code_2, size: 18),
-                              label: Text(
-                                payment.paymentType == 'DP'
-                                    ? 'Bayar DP Sekarang'
-                                    : 'Bayar Pelunasan Sekarang',
-                              ),
+                              label: const Text('Bayar Sekarang'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.success,
                                 foregroundColor: Colors.white,
@@ -777,9 +526,6 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
     }
 
     if (order.status != 'CLOSED') return const SizedBox.shrink();
-    if (order.status != 'COMPLETED' && order.status != 'CLOSED') {
-      return const SizedBox.shrink();
-    }
 
     final reviewAsync = ref.watch(orderReviewProvider(order.id));
 
@@ -933,39 +679,6 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
           ),
           const SizedBox(height: 16),
           if (order.status == 'CREATED') ...[
-            // Show error message if GPS check failed
-            if (actionState.errorMessage != null) ...[
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.danger.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppTheme.danger.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.warning_amber_rounded,
-                      color: AppTheme.danger,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        actionState.errorMessage!,
-                        style: const TextStyle(
-                          color: AppTheme.danger,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -985,16 +698,11 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                         final success = await ref
                             .read(orderActionControllerProvider.notifier)
                             .respondToOrder(order.id, 'accept');
-                        if (context.mounted) {
-                          if (success) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Order diterima!')),
-                            );
-                            ref.invalidate(orderDetailProvider(order.id));
-                          } else {
-                            // Error message is already shown via actionState.errorMessage
-                            ref.invalidate(orderActionControllerProvider);
-                          }
+                        if (success && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Order diterima!')),
+                          );
+                          ref.refresh(orderDetailProvider(order.id));
                         }
                       },
               ),
@@ -1023,7 +731,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Order ditolak')),
                           );
-                          ref.invalidate(orderDetailProvider(order.id));
+                          ref.refresh(orderDetailProvider(order.id));
                         }
                       },
               ),
@@ -1052,7 +760,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Pekerjaan dimulai')),
                           );
-                          ref.invalidate(orderDetailProvider(order.id));
+                          ref.refresh(orderDetailProvider(order.id));
                         } else if (!success && context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -1086,66 +794,6 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
               ),
             ),
           ],
-          // FIX: Handle price rejection for provider - allow resubmit of final price
-          if (order.status == 'COMPLETED' &&
-              order.finalPriceApprovalStatus == 'REJECTED') ...[
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppTheme.warning.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppTheme.warning.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: AppTheme.warning,
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Harga final sebelumnya ditolak customer. Silakan ajukan harga baru.',
-                            style: TextStyle(
-                              color: AppTheme.warning,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Input Harga Final Baru'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.orange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: actionState.isLoading
-                          ? null
-                          : () => _showFinalPriceDialog(context, ref, order),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
           if (actionState.isLoading)
             const Padding(
               padding: EdgeInsets.only(top: 12),
@@ -1176,10 +824,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
       'ACCEPTED',
       'IN_PROGRESS',
     ].contains(order.status);
-    final approvalPending =
-        order.status == 'COMPLETED' &&
-        order.finalPriceApprovalStatus == 'PENDING';
-    if (!cancellable && !approvalPending) return const SizedBox.shrink();
+    if (!cancellable) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1208,75 +853,24 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
             ],
           ),
           const SizedBox(height: 16),
-          if (approvalPending) ...[
-            const Text(
-              'Provider sudah mengirim harga final. Setujui untuk menerbitkan tagihan pelunasan.',
-              style: TextStyle(fontSize: 13, color: AppTheme.grey600),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.close_rounded, size: 18),
-                    label: const Text('Tolak'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.danger,
-                      side: const BorderSide(color: AppTheme.danger),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: actionState.isLoading
-                        ? null
-                        : () =>
-                              _decideFinalPrice(context, ref, order, 'reject'),
-                  ),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.cancel_outlined, size: 18),
+              label: const Text('Batalkan Pesanan'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.danger,
+                side: const BorderSide(color: AppTheme.danger),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.check_rounded, size: 18),
-                    label: const Text('Setuju'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.success,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: actionState.isLoading
-                        ? null
-                        : () =>
-                              _decideFinalPrice(context, ref, order, 'approve'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-          if (cancellable) ...[
-            if (approvalPending) const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.cancel_outlined, size: 18),
-                label: const Text('Batalkan Pesanan'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.danger,
-                  side: const BorderSide(color: AppTheme.danger),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: actionState.isLoading
-                    ? null
-                    : () => _showCancelDialog(context, ref, order),
               ),
+              onPressed: actionState.isLoading
+                  ? null
+                  : () => _showCancelDialog(context, ref, order),
             ),
-          ],
+          ),
           if (actionState.isLoading)
             const Padding(
               padding: EdgeInsets.only(top: 12),
@@ -1290,35 +884,6 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
         ],
       ),
     );
-  }
-
-  Future<void> _decideFinalPrice(
-    BuildContext context,
-    WidgetRef ref,
-    OrderData order,
-    String action,
-  ) async {
-    try {
-      final api = ref.read(apiServiceProvider);
-      await api.decideFinalPrice(orderId: order.id, action: action);
-      ref.invalidate(orderDetailProvider(order.id));
-      ref.invalidate(myOrdersProvider);
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            action == 'approve'
-                ? 'Harga final disetujui. Tagihan pelunasan sudah dibuat.'
-                : 'Harga final ditolak.',
-          ),
-        ),
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal memproses harga final: $e')),
-      );
-    }
   }
 
   void _showCancelDialog(BuildContext context, WidgetRef ref, OrderData order) {
@@ -1344,7 +909,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.warning.withValues(alpha: 0.1),
+                  color: AppTheme.warning.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -1403,7 +968,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                       content: Text('Pesanan berhasil dibatalkan'),
                     ),
                   );
-                  ref.invalidate(orderDetailProvider(order.id));
+                  ref.refresh(orderDetailProvider(order.id));
                 } else {
                   final errorMsg = ref
                       .read(orderActionControllerProvider)
@@ -1431,164 +996,68 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
     final controller = TextEditingController(
       text: order.estimatedPrice.toString(),
     );
-    final initialPhotos = <XFile>[];
-    final finalPhotos = <XFile>[];
-    final receiptPhotos = <XFile>[];
-    final picker = ImagePicker();
 
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) {
-          Future<void> pickInto(List<XFile> target) async {
-            final images = await picker.pickMultiImage();
-            if (images.isNotEmpty) {
-              setDialogState(() => target.addAll(images));
-            }
-          }
-
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Harga Final',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Masukkan harga akhir setelah pekerjaan selesai',
+              style: TextStyle(fontSize: 13, color: AppTheme.grey600),
             ),
-            title: const Text(
-              'Harga Final',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Masukkan harga akhir dan laporan foto setelah pekerjaan selesai',
-                    style: TextStyle(fontSize: 13, color: AppTheme.grey600),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: controller,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      prefixText: 'Rp ',
-                      hintText: '0',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  _buildReportPicker(
-                    'Foto kondisi awal',
-                    initialPhotos,
-                    () => pickInto(initialPhotos),
-                  ),
-                  _buildReportPicker(
-                    'Foto kondisi akhir',
-                    finalPhotos,
-                    () => pickInto(finalPhotos),
-                  ),
-                  _buildReportPicker(
-                    'Foto kuitansi pembelian',
-                    receiptPhotos,
-                    () => pickInto(receiptPhotos),
-                  ),
-                ],
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                prefixText: 'Rp ',
+                hintText: '0',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Batal'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final finalPrice = int.tryParse(controller.text) ?? 0;
-                  if (finalPrice <= 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Harga tidak valid')),
-                    );
-                    return;
-                  }
-                  if (initialPhotos.isEmpty || finalPhotos.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Foto kondisi awal dan akhir wajib diisi',
-                        ),
-                      ),
-                    );
-                    return;
-                  }
-
-                  final success = await ref
-                      .read(orderActionControllerProvider.notifier)
-                      .completeOrder(
-                        order.id,
-                        finalPrice,
-                        initialConditionPhotos: await _toMultipart(
-                          initialPhotos,
-                        ),
-                        finalConditionPhotos: await _toMultipart(finalPhotos),
-                        receiptPhotos: await _toMultipart(receiptPhotos),
-                      );
-                  if (context.mounted) {
-                    Navigator.pop(ctx);
-                    if (success) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Pekerjaan selesai!')),
-                      );
-                      ref.invalidate(orderDetailProvider(order.id));
-                    }
-                  }
-                },
-                child: const Text('Konfirmasi'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildReportPicker(
-    String label,
-    List<XFile> files,
-    VoidCallback onPick,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              '$label (${files.length})',
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
           ),
-          TextButton.icon(
-            onPressed: onPick,
-            icon: const Icon(Icons.add_photo_alternate_outlined, size: 18),
-            label: const Text('Tambah'),
+          ElevatedButton(
+            onPressed: () async {
+              final finalPrice = int.tryParse(controller.text) ?? 0;
+              if (finalPrice <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Harga tidak valid')),
+                );
+                return;
+              }
+              final success = await ref
+                  .read(orderActionControllerProvider.notifier)
+                  .completeOrder(order.id, finalPrice);
+              if (context.mounted) {
+                Navigator.pop(ctx);
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Pekerjaan selesai!')),
+                  );
+                  ref.refresh(orderDetailProvider(order.id));
+                }
+              }
+            },
+            child: const Text('Konfirmasi'),
           ),
         ],
       ),
     );
-  }
-
-  Future<List<MultipartFile>> _toMultipart(List<XFile> files) async {
-    final result = <MultipartFile>[];
-    for (final file in files) {
-      final bytes = await file.readAsBytes();
-      final lower = file.name.toLowerCase();
-      final mime = lower.endsWith('.png') ? 'image/png' : 'image/jpeg';
-      result.add(
-        MultipartFile.fromBytes(
-          bytes,
-          filename: file.name,
-          contentType: MediaType.parse(mime),
-        ),
-      );
-    }
-    return result;
   }
 
   void _showReviewDialog(BuildContext context, WidgetRef ref, int orderId) {
@@ -1667,7 +1136,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                                 ? null
                                 : commentController.text.trim(),
                           );
-                      ref.invalidate(orderReviewProvider(orderId));
+                      ref.refresh(orderReviewProvider(orderId));
                       if (context.mounted) {
                         Navigator.pop(dialogContext);
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -1780,10 +1249,6 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
       }
     }
 
-    XFile? paymentProof;
-    Uint8List? paymentProofBytes;
-    var isConfirming = false;
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1802,9 +1267,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
           });
         }
 
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            return AlertDialog(
+        return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -1813,7 +1276,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.success.withValues(alpha: 0.1),
+                  color: AppTheme.success.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.qr_code_2, color: AppTheme.success),
@@ -1837,7 +1300,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.orange.withValues(alpha: 0.1),
+                      color: AppTheme.orange.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -1905,45 +1368,10 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                 ],
                 const SizedBox(height: 12),
                 const Text(
-                  'Scan QRIS atau buka halaman pembayaran untuk menyelesaikan transaksi. Bukti pembayaran wajib diunggah sebelum konfirmasi.',
+                  'Scan QRIS atau buka halaman pembayaran untuk menyelesaikan transaksi.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, color: AppTheme.grey600),
                 ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: isConfirming
-                      ? null
-                      : () async {
-                          final selected = await ImagePicker().pickImage(
-                            source: ImageSource.gallery,
-                            imageQuality: 85,
-                          );
-                          if (selected == null) return;
-                          final bytes = await selected.readAsBytes();
-                          setDialogState(() {
-                            paymentProof = selected;
-                            paymentProofBytes = bytes;
-                          });
-                        },
-                  icon: const Icon(Icons.upload_file),
-                  label: Text(
-                    paymentProof == null
-                        ? 'Unggah bukti pembayaran'
-                        : 'Ganti bukti pembayaran',
-                  ),
-                ),
-                if (paymentProofBytes != null) ...[
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.memory(
-                      paymentProofBytes!,
-                      height: 110,
-                      width: 110,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
@@ -1958,27 +1386,12 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                 backgroundColor: AppTheme.success,
                 foregroundColor: Colors.white,
               ),
-              onPressed: isConfirming
-                  ? null
-                  : () async {
-                if (paymentProof == null || paymentProofBytes == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Unggah screenshot bukti pembayaran terlebih dahulu.'),
-                    ),
-                  );
-                  return;
-                }
-                setDialogState(() => isConfirming = true);
+              onPressed: () async {
                 try {
                   final result = await ref
                       .read(apiServiceProvider)
-                      .confirmPayment(
-                        paymentId,
-                        proofBytes: paymentProofBytes!,
-                        proofFileName: paymentProof!.name,
-                      );
-                  ref.invalidate(orderDetailProvider(orderId));
+                      .confirmPayment(paymentId);
+                  ref.refresh(orderDetailProvider(orderId));
                   if (context.mounted) {
                     Navigator.pop(ctx);
                     final midtransStatus = result['midtrans_status'];
@@ -2006,17 +1419,11 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                       SnackBar(content: Text('Gagal konfirmasi: $e')),
                     );
                   }
-                } finally {
-                  if (dialogContext.mounted) {
-                    setDialogState(() => isConfirming = false);
-                  }
                 }
               },
-              child: Text(isConfirming ? 'Mengonfirmasi...' : 'Sudah Dibayar'),
+              child: const Text('Sudah Dibayar'),
             ),
           ],
-        );
-          },
         );
       },
     );
