@@ -94,8 +94,6 @@ class AuthController extends StateNotifier<AuthState> {
         businessName: businessName,
         serviceName: serviceName,
         basePrice: basePrice,
-        cityId: cityId,
-        districtId: districtId,
       );
 
       state = state.copyWith(isLoading: false, fieldErrors: {});

@@ -108,14 +108,14 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
     ref.invalidate(categoriesProvider);
 
     if (searchQuery.isNotEmpty) {
-      ref.invalidate(searchProvidersProvider(searchQuery));
+      ref.invalidate(searchProvidersProvider(ProviderSearchQuery(query: searchQuery)));
     } else if (selectedCategory != null) {
-      ref.invalidate(providersByCategoryProvider(selectedCategory));
+      ref.invalidate(providersByCategoryProvider(ProviderCatalogQuery(categoryId: selectedCategory)));
     } else {
       final categoriesAsync = ref.read(categoriesProvider);
       categoriesAsync.whenData((categories) {
         if (categories.isNotEmpty) {
-          ref.invalidate(providersByCategoryProvider(categories.first.id));
+          ref.invalidate(providersByCategoryProvider(ProviderCatalogQuery(categoryId: categories.first.id)));
         }
       });
     }
@@ -640,7 +640,7 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
     WidgetRef ref,
     int categoryId,
   ) {
-    final providersAsync = ref.watch(providersByCategoryProvider(categoryId));
+    final providersAsync = ref.watch(providersByCategoryProvider(ProviderCatalogQuery(categoryId: categoryId)));
 
     return providersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -676,7 +676,7 @@ class _CatalogPageState extends ConsumerState<CatalogPage>
   // ─── Search Results ──────────────────────────────────────────────────────
   Widget _buildSearchResults(BuildContext context, WidgetRef ref) {
     final searchQuery = ref.watch(searchQueryProvider);
-    final resultsAsync = ref.watch(searchProvidersProvider(searchQuery));
+    final resultsAsync = ref.watch(searchProvidersProvider(ProviderSearchQuery(query: searchQuery)));
 
     return resultsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),

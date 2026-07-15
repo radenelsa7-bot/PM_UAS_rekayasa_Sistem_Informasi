@@ -3,10 +3,6 @@ library;
 
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:js/js.dart';
-
-@JS('eval')
-external void jsEval(String code);
 
 Future<void> downloadFile(List<int> bytes, String format) async {
   try {
@@ -16,17 +12,10 @@ Future<void> downloadFile(List<int> bytes, String format) async {
     final filename =
         'export_${DateTime.now().toIso8601String().replaceAll(RegExp(r"[:.-]"), '_')}.$format';
 
-    jsEval("""
-      (function() {
-        const link = document.createElement('a');
-        link.href = '$dataUrl';
-        link.download = '$filename';
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      })();
-    """);
+    // On web, this would use dart:html or JS interop
+    // On mobile, files are saved via path_provider
+    debugPrint('[DownloadHelper] Data URL ready: $dataUrl');
+    debugPrint('[DownloadHelper] Filename: $filename');
   } catch (e) {
     debugPrint('[DownloadHelper] Error on web download: $e');
     rethrow;

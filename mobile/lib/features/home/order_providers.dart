@@ -251,9 +251,6 @@ class OrderActionController extends StateNotifier<OrderActionState> {
       await apiService.completeOrder(
         orderId: orderId,
         finalPrice: finalPrice,
-        initialConditionPhotos: initialConditionPhotos,
-        finalConditionPhotos: finalConditionPhotos,
-        receiptPhotos: receiptPhotos,
       );
       state = state.copyWith(isLoading: false, success: true);
       // Refresh orders after completing

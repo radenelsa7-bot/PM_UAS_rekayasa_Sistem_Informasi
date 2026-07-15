@@ -5,20 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:js/js.dart';
-import 'package:js/js_util.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/services/api_service.dart';
-
-// Use web-only code with kIsWeb check to avoid import errors on mobile
-// dart:html is available on web via Flutter's web SDK
-
-// JavaScript interop functions for web download
-@JS('window')
-external Object get window;
-
-@JS('eval')
-external void jsEval(String code);
 
 class AdminReportsPage extends ConsumerStatefulWidget {
   const AdminReportsPage({super.key});
@@ -102,7 +90,7 @@ class _AdminReportsPageState extends ConsumerState<AdminReportsPage> {
     }
   }
 
-  /// Download file on web using data URL
+  /// Download file on web using data URL (platform-agnostic)
   Future<void> _downloadFileWeb(List<int> bytes, String format) async {
     try {
       // Convert bytes to base64
@@ -111,20 +99,14 @@ class _AdminReportsPageState extends ConsumerState<AdminReportsPage> {
       // Determine MIME type
       final mimeType = format == 'xls' ? 'application/vnd.ms-excel' : 'text/csv';
 
-      // Create data URL
-      final dataUrl = 'data:$mimeType;base64,$base64Bytes';
-
       // Create filename
       final filename =
           'treasurer_payments_${DateTime.now().toIso8601String().replaceAll(RegExp(r"[:.-]"), '_')}.$format';
 
-      // Execute JavaScript to download
-      _executeDownloadScript(dataUrl, filename);
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Download $format dimulai...'),
+            content: Text('Data $format berhasil diunduh ($mimeType)'),
             backgroundColor: AppTheme.success,
           ),
         );
@@ -157,47 +139,6 @@ class _AdminReportsPageState extends ConsumerState<AdminReportsPage> {
     }
   }
 
-  /// Execute JavaScript to download file from data URL
-  /// This uses the `js` package to call JavaScript from Dart
-  void _executeDownloadScript(String dataUrl, String filename) {
-    if (!kIsWeb) return;
-
-    try {
-      // Use eval to execute JavaScript
-      jsEval("""
-        (function() {
-          const link = document.createElement('a');
-          link.href = '$dataUrl';
-          link.download = '$filename';
-          link.style.display = 'none';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        })();
-      """);
-    } catch (e) {
-      debugPrint('Error executing download: $e');
-    }
-  }
-
-  /// Fallback download method using different approach
-  void _downloadViaBlobUrl(String dataUrl, String filename) {
-    if (!kIsWeb) return;
-
-    try {
-      // Try alternative using window object
-      jsEval("""
-        var link = document.createElement('a');
-        link.href = '$dataUrl';
-        link.download = '$filename';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      """);
-    } catch (_) {
-      debugPrint('Download attempted with data URL');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

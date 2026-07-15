@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/auth_response.dart';
 import '../models/category_model.dart';
+import '../models/location_models.dart';
 import '../models/provider_model.dart';
 import '../models/order_model.dart';
 import '../models/review_model.dart';
@@ -121,6 +122,60 @@ class ApiService {
     }
   }
 
+  // ===== LOCATION ENDPOINTS =====
+
+  Future<Map<String, dynamic>> getKota() async {
+    try {
+      final response = await dio.get('/api/locations/cities');
+      final data = response.data['data'];
+      if (data is List) {
+        return {'data': data};
+      }
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getKecamatan(int kotaId) async {
+    try {
+      final response = await dio.get('/api/locations/cities/$kotaId/districts');
+      final data = response.data['data'];
+      if (data is List) {
+        return {'data': data};
+      }
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<CityData>> getCities() async {
+    try {
+      final response = await dio.get('/api/locations/cities');
+      final data = response.data['data'];
+      if (data is List) {
+        return data.map((item) => CityData.fromJson(Map<String, dynamic>.from(item))).toList();
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<DistrictData>> getDistrictsByCity(int cityId) async {
+    try {
+      final response = await dio.get('/api/locations/cities/$cityId/districts');
+      final data = response.data['data'];
+      if (data is List) {
+        return data.map((item) => DistrictData.fromJson(Map<String, dynamic>.from(item))).toList();
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // ===== CATALOG ENDPOINTS =====
 
   Future<CategoriesResponse> getCategories() async {
@@ -132,10 +187,36 @@ class ApiService {
     }
   }
 
-  Future<ProvidersResponse> getProvidersByCategory(int categoryId) async {
+  Future<ProvidersResponse> getProvidersByCategory(
+    int categoryId, {
+    int? kotaId,
+    int? kecamatanId,
+  }) async {
     try {
+      final params = <String, dynamic>{};
+      if (kotaId != null) params['kota_id'] = kotaId;
+      if (kecamatanId != null) params['kecamatan_id'] = kecamatanId;
       final response = await dio.get(
         '/api/catalog/categories/$categoryId/providers',
+        queryParameters: params.isNotEmpty ? params : null,
+      );
+      return ProvidersResponse.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<ProvidersResponse> getProviders({
+    int? kotaId,
+    int? kecamatanId,
+  }) async {
+    try {
+      final params = <String, dynamic>{};
+      if (kotaId != null) params['kota_id'] = kotaId;
+      if (kecamatanId != null) params['kecamatan_id'] = kecamatanId;
+      final response = await dio.get(
+        '/api/catalog/providers',
+        queryParameters: params.isNotEmpty ? params : null,
       );
       return ProvidersResponse.fromJson(response.data);
     } catch (e) {
@@ -158,11 +239,18 @@ class ApiService {
     }
   }
 
-  Future<ProvidersResponse> searchProviders(String query) async {
+  Future<ProvidersResponse> searchProviders(
+    String query, {
+    int? kotaId,
+    int? kecamatanId,
+  }) async {
     try {
+      final params = <String, dynamic>{'q': query};
+      if (kotaId != null) params['kota_id'] = kotaId;
+      if (kecamatanId != null) params['kecamatan_id'] = kecamatanId;
       final response = await dio.get(
         '/api/catalog/providers/search',
-        queryParameters: {'q': query},
+        queryParameters: params,
       );
       return ProvidersResponse.fromJson(response.data);
     } catch (e) {
@@ -175,6 +263,27 @@ class ApiService {
   Future<OrderData> createOrder(CreateOrderRequest request) async {
     try {
       final response = await dio.post('/api/orders', data: request.toJson());
+      return OrderData.fromJson(response.data['data']);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<OrderData> createOrderWithFiles(
+    Map<String, dynamic> fields,
+    List<MultipartFile> files,
+  ) async {
+    try {
+      final formData = FormData();
+      fields.forEach((key, value) {
+        if (value != null) {
+          formData.fields.add(MapEntry(key, value.toString()));
+        }
+      });
+      for (final file in files) {
+        formData.files.add(MapEntry('photos[]', file));
+      }
+      final response = await dio.post('/api/orders', data: formData);
       return OrderData.fromJson(response.data['data']);
     } catch (e) {
       rethrow;

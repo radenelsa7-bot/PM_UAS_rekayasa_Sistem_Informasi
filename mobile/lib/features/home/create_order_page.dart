@@ -177,7 +177,9 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
     setState(() => _isLoadingWilayah = true);
     try {
       final api = ref.read(apiServiceProvider);
-      final kota = await api.getKota();
+      final kotaResponse = await api.getKota();
+      final kotaData = kotaResponse['data'];
+      final kota = kotaData is List ? kotaData.cast<Map<String, dynamic>>() : <Map<String, dynamic>>[];
       if (!mounted) return;
 
       List<Map<String, dynamic>> coverageFiltered = [];
@@ -217,7 +219,9 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
     setState(() => _isLoadingKecamatan = true);
     try {
       final api = ref.read(apiServiceProvider);
-      final kecamatan = await api.getKecamatan(kotaId);
+      final kecamatanResponse = await api.getKecamatan(kotaId);
+      final kecamatanData = kecamatanResponse['data'];
+      final kecamatan = kecamatanData is List ? kecamatanData.cast<Map<String, dynamic>>() : <Map<String, dynamic>>[];
       if (!mounted) return;
       final coverageFiltered = _hasCoverageFilter
           ? kecamatan.where((item) {

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/app_theme.dart';
@@ -59,13 +60,30 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
     try {
       final api = ref.read(apiServiceProvider);
-      final resp = await api.sendChatbotMessage(text);
+      final replyText = await api.sendChatbotMessage(text);
       if (!mounted) return;
-      final replyText = resp['reply']?.toString() ?? '';
-      final actions = resp['actions'] is List ? resp['actions'] as List : [];
-      setState(() {
-        _messages.add({'from': 'bot', 'text': replyText, 'actions': actions});
-      });
+      // Try to parse response as JSON for action buttons
+      List<Map<String, dynamic>> actions = [];
+      try {
+        final decoded = jsonDecode(replyText);
+        if (decoded is Map<String, dynamic>) {
+          final reply = decoded['reply']?.toString() ?? replyText;
+          if (decoded['actions'] is List) {
+            actions = (decoded['actions'] as List).cast<Map<String, dynamic>>();
+          }
+          setState(() {
+            _messages.add({'from': 'bot', 'text': reply, 'actions': actions});
+          });
+        } else {
+          setState(() {
+            _messages.add({'from': 'bot', 'text': replyText, 'actions': actions});
+          });
+        }
+      } catch (_) {
+        setState(() {
+          _messages.add({'from': 'bot', 'text': replyText, 'actions': actions});
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {

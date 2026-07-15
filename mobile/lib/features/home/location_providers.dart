@@ -7,8 +7,8 @@ import '../../core/services/api_service.dart';
 final citiesProvider = FutureProvider<List<CityData>>((ref) async {
   final apiService = ref.read(apiServiceProvider);
   try {
-    final response = await apiService.getCities();
-    return response.data;
+    final cities = await apiService.getCities();
+    return cities;
   } catch (e) {
     debugPrint('Error fetching cities: $e');
     rethrow;
@@ -21,8 +21,8 @@ final districtsByCityProvider =
     FutureProvider.family<List<DistrictData>, int>((ref, cityId) async {
   final apiService = ref.read(apiServiceProvider);
   try {
-    final response = await apiService.getDistrictsByCity(cityId);
-    return response.data;
+    final districts = await apiService.getDistrictsByCity(cityId);
+    return districts;
   } catch (e) {
     debugPrint('Error fetching districts for city $cityId: $e');
     rethrow;

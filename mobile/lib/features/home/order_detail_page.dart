@@ -16,8 +16,15 @@ import 'order_providers.dart';
 
 class OrderDetailPage extends ConsumerWidget {
   final int orderId;
+  final bool autoOpenQris;
+  final int? autoPaymentId;
 
-  const OrderDetailPage({super.key, required this.orderId});
+  const OrderDetailPage({
+    super.key,
+    required this.orderId,
+    this.autoOpenQris = false,
+    this.autoPaymentId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
