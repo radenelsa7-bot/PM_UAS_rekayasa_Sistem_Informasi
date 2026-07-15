@@ -16,9 +16,8 @@ final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
       baseUrl: ApiConfig.baseUrl,
-      connectTimeout: const Duration(seconds: 60),
-      receiveTimeout: const Duration(seconds: 60),
-      sendTimeout: const Duration(seconds: 60),
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
@@ -32,7 +31,9 @@ final dioProvider = Provider<Dio>((ref) {
   }
 
   // Add retry interceptor for rate limiting (429/409 errors)
-  dio.interceptors.add(RetryOnConnectionChangeInterceptor(dio: dio));
+  dio.interceptors.add(
+    RetryOnConnectionChangeInterceptor(dio: dio),
+  );
 
   _sharedDio = dio;
   return dio;
@@ -68,7 +69,7 @@ class RetryOnConnectionChangeInterceptor extends Interceptor {
   RetryOnConnectionChangeInterceptor({required this.dio});
 
   final Dio dio;
-  final Map<String, int> _retryCountMap = {}; // Track retry count per request
+  int _retryCount = 0;
   static const int _maxRetries = 3;
   static const Duration _baseDelay = Duration(milliseconds: 500);
 
@@ -78,15 +79,13 @@ class RetryOnConnectionChangeInterceptor extends Interceptor {
     ErrorInterceptorHandler handler,
   ) async {
     final statusCode = err.response?.statusCode;
-    final requestKey = '${err.requestOptions.method}:${err.requestOptions.path}:${err.requestOptions.data.toString()}';
-    final retryCount = _retryCountMap[requestKey] ?? 0;
 
     // Retry on 429 (Too Many Requests) or 409 (Conflict) up to 3 times
-    if ((statusCode == 429 || statusCode == 409) && retryCount < _maxRetries) {
-      _retryCountMap[requestKey] = retryCount + 1;
+    if ((statusCode == 429 || statusCode == 409) && _retryCount < _maxRetries) {
+      _retryCount++;
 
       // Exponential backoff: 500ms, 1s, 2s
-      final delayMs = _baseDelay.inMilliseconds * (retryCount + 1);
+      final delayMs = _baseDelay.inMilliseconds * (_retryCount);
       await Future.delayed(Duration(milliseconds: delayMs));
 
       try {
@@ -95,17 +94,18 @@ class RetryOnConnectionChangeInterceptor extends Interceptor {
           options.path,
           data: options.data,
           queryParameters: options.queryParameters,
-          options: Options(method: options.method, headers: options.headers),
+          options: Options(
+            method: options.method,
+            headers: options.headers,
+          ),
         );
-        _retryCountMap.remove(requestKey); // Clean up after success
         return handler.resolve(response);
       } catch (e) {
-        _retryCountMap.remove(requestKey); // Clean up after final failure
         return handler.next(err);
       }
     }
 
-    _retryCountMap.remove(requestKey); // Clean up
+    _retryCount = 0; // Reset retry counter
     return handler.next(err);
   }
 }
