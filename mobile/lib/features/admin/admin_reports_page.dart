@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/app_theme.dart';
@@ -63,13 +64,18 @@ class _AdminReportsPageState extends ConsumerState<AdminReportsPage> {
       }
 
       final bytes = await api.getAdminPaymentReport(queryParameters: params);
-      await downloadFile(bytes, format);
+      final filePath = await downloadFile(bytes, format);
 
       if (mounted) {
+        // Show different message for mobile vs web
+        final message = kIsWeb
+            ? 'Export $format berhasil - file otomatis terunduh'
+            : 'Export $format berhasil - File disimpan di: $filePath';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Export $format berhasil'),
+            content: Text(message),
             backgroundColor: AppTheme.success,
+            duration: const Duration(seconds: 5),
           ),
         );
       }

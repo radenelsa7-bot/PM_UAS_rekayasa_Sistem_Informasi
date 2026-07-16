@@ -13,7 +13,9 @@ import 'provider_dashboard_page.dart';
 import 'edit_profile_dialog.dart';
 
 class HomePage extends ConsumerStatefulWidget {
-  const HomePage({super.key});
+  final int initialIndex;
+
+  const HomePage({super.key, this.initialIndex = 0});
 
   @override
   ConsumerState<HomePage> createState() => _HomePageState();
@@ -32,12 +34,23 @@ class _HomePageState extends ConsumerState<HomePage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = ref.watch(authControllerProvider);
 
     // Admin gets full dashboard
     if (state.userRole == 'ADMIN') {
       return const AdminDashboardPage();
+    }
+
+    // Update selected index when returning from CreateOrderPage
+    if (_selectedIndex != widget.initialIndex) {
+      _selectedIndex = widget.initialIndex;
     }
 
     final isProvider = state.userRole == 'PROVIDER';

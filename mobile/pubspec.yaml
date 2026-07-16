@@ -24,6 +24,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   js: ^0.6.7
   flutter_screenutil: ^5.9.0
+  open_filex: ^4.0.0
 
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.0.0

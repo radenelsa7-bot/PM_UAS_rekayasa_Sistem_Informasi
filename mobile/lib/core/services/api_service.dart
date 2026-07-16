@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http_parser/http_parser.dart';
 import '../models/auth_response.dart';
 import '../models/category_model.dart';
 import '../models/provider_model.dart';
@@ -599,17 +601,29 @@ class ApiService {
     required String proofFileName,
   }) async {
     try {
-      final response = await dio.post(
-        '/api/payments/$paymentId/confirm',
-        data: FormData.fromMap({
-          'payment_proof': MultipartFile.fromBytes(
+      // Create FormData properly for file upload
+      final form = FormData();
+      form.files.add(
+        MapEntry(
+          'payment_proof',
+          MultipartFile.fromBytes(
             proofBytes,
             filename: proofFileName,
+            contentType: MediaType.parse('image/jpeg'),
           ),
-        }),
+        ),
+      );
+
+      final response = await dio.post(
+        '/api/payments/$paymentId/confirm',
+        data: form,
       );
       return Map<String, dynamic>.from(response.data['data'] ?? {});
     } catch (e) {
+      // Print error response data to terminal for debugging
+      if (e is DioException && e.response != null) {
+        debugPrint('[confirmPayment] Error response: ${e.response?.data}');
+      }
       rethrow;
     }
   }
