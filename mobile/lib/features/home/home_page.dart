@@ -22,7 +22,7 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
   static const List<BottomNavigationBarItem> _customerBottomItems = [
     BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Beranda'),
@@ -46,11 +46,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     // Admin gets full dashboard
     if (state.userRole == 'ADMIN') {
       return const AdminDashboardPage();
-    }
-
-    // Update selected index when returning from CreateOrderPage
-    if (_selectedIndex != widget.initialIndex) {
-      _selectedIndex = widget.initialIndex;
     }
 
     final isProvider = state.userRole == 'PROVIDER';
