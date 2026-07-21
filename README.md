@@ -1,6 +1,7 @@
 # TukangDekat — Aplikasi Pemesanan Jasa Lokal
 
-[Status](Siap Untuk Uji Coba End-to-End dan Deployment)(https://github.com/radenelsa7-bot/AplikasiTukangDekat.io)
+Status: Siap Untuk Uji Coba End-to-End dan Deployment
+(https://github.com/radenelsa7-bot/AplikasiTukangDekat.io)
 
 ---
 
@@ -23,7 +24,7 @@
 
 ## 🎯 Profil & Pengenalan Aplikasi
 
-**TukangDekat** adalah platform digital yang menghubungkan warga atau pelanggan dengan penyedia jasa lokal (tukang atau teknisi) di **Kecamatan Bojongloa Kaler, Bandung**. Aplikasi ini dirancang untuk memudahkan proses pemesanan dan pembayaran jasa secara online dengan fitur-fitur modern.
+**TukangDekat** adalah platform digital yang menghubungkan warga atau pelanggan dengan penyedia jasa lokal (tukang atau teknisi). Aplikasi ini dirancang untuk memudahkan proses pemesanan dan pembayaran jasa secara online dengan fitur-fitur modern.
 
 ### Latar Belakang
 
@@ -51,8 +52,7 @@ Sistem ini menggantikan proses pemesanan jasa yang umumnya dilakukan secara manu
 |------|-----------|
 | **Customer** (warga/pelanggan) | Memesan jasa, melakukan pembayaran, memberi rating |
 | **Provider** (tukang/teknisi) | Menerima order, mengerjakan, memperbarui status order |
-| **Admin** (pengurus) | Mengelola kategori, memverifikasi provider, memonitor aktivitas |
-| **Treasurer** (bendahara) | Memonitor transaksi pembayaran, rekap pembayaran |
+| **Admin + Treasurer** (pengurus + bendahara) | Mengelola kategori, memverifikasi provider, memonitor aktivitas, Memonitor transaksi pembayaran, rekap pembayaran|
 
 ---
 
@@ -97,6 +97,7 @@ Sistem ini menggantikan proses pemesanan jasa yang umumnya dilakukan secara manu
 - Profil provider dengan business name dan coverage area
 - Pengelolaan layanan oleh provider sendiri
 - Status verifikasi provider (pending, approved, rejected)
+- **Mailtrap Notification**: Notifikasi email otomatis saat akun provider diverifikasi admin
 
 ### 4.3 Service Catalog & Search
 - Daftar kategori layanan
@@ -111,15 +112,15 @@ Sistem ini menggantikan proses pemesanan jasa yang umumnya dilakukan secara manu
 - Mulai dan selesaikan pekerjaan oleh provider
 - Update harga final oleh provider sebelum pelunasan
 
-### 4.5 Payment (DP & Final) via QRIS
+### 4.5 Payment (DP & Final) via QRIS - Midtrans
 - Pembayaran DP 50% menggunakan QRIS
 - Pembayaran pelunasan 50% setelah persetujuan harga final
-- Integrasi dengan Midtrans/Xendit untuk payment gateway
+- **Integrasi Midtrans** sebagai Payment Gateway utama
 - Webhook untuk notifikasi pembayaran otomatis
 - Validasi tanda tangan webhook untuk keamanan
 
 ### 4.6 Notifications
-- Notifikasi via n8n untuk WhatsApp/Email
+- **Mailtrap** untuk notifikasi pemberitahuan akun yang sudah diverifikasi
 - Notifikasi pada setiap perubahan status order
 - Notifikasi pembayaran kepada customer dan provider
 
@@ -131,6 +132,11 @@ Sistem ini menggantikan proses pemesanan jasa yang umumnya dilakukan secara manu
 - Dashboard monitoring transaksi pembayaran
 - Laporan pembayaran harian/bulanan
 - Rekapitulasi fee platform dan payout provider
+
+### 4.9 Chatbot - Gemini AI
+- **Chatbot integrasi Gemini API** untuk bantuan pengguna
+- Komunikasi natural language processing
+- Support bahasa Indonesia
 
 ---
 
@@ -155,14 +161,14 @@ Berikut adalah beberapa layar utama yang tersedia di aplikasi mobile:
 | Admin Categories | `mobile/lib/features/admin/admin_categories_page.dart` | Kelola kategori |
 | Admin Transactions | `mobile/lib/features/admin/admin_transactions_page.dart` | Kelola transaksi |
 | Admin Reports | `mobile/lib/features/admin/admin_reports_page.dart` | Laporan keuangan |
-| Chatbot | `mobile/lib/features/chat/chatbot_screen.dart` | Asisten virtual |
-| Location Picker | `mobile/lib/features/maps/osm_location_picker_screen.dart` | Pemilihan lokasi di peta |
+| Chatbot | `mobile/lib/features/chat/chatbot_screen.dart` | Asisten virtual berbasis Gemini AI |
+| Location Picker | `mobile/lib/features/maps/osm_location_picker_screen.dart` | Pemilihan lokasi di peta menggunakan OpenStreetMap |
 
 ### Komponen UI Utama
 
 - **Bottom Navigation**: Navigasi utama untuk Customer & Provider
 - **Gradient App Bar**: Desain modern dengan efek gradient
-- **Live Tracking Map**: Widget peta untuk tracking lokasi (Menggunakan Flutter Map + OpenStreetMap)
+- **Live Tracking Map**: Widget peta untuk tracking lokasi (Menggunakan **Flutter Map + OpenStreetMap**)
 - **Order Status Timeline**: Visualisasi status order secara real-time
 
 ---
@@ -179,16 +185,16 @@ Berikut adalah beberapa layar utama yang tersedia di aplikasi mobile:
         │                        │                        │
         │                        ▼                        │
         │               ┌─────────────────┐               │
-        │               │  n8n Workflow   │               │
-        │               │  (Automation)   │               │
+        │               │  Mailtrap SMTP  │               │
+        │               │  (Email Service)│               │
         │               └─────────────────┘               │
         │                        │                        │
         └────────────────────────┼────────────────────────┘
                                  │
                                  ▼
                     ┌─────────────────────────┐
-                    │   Payment Gateway       │
-                    │   (Midtrans/Xendit)     │
+                    │   Payment Gateway         │
+                    │   (Midtrans QRIS)         │
                     └─────────────────────────┘
 ```
 
@@ -202,7 +208,7 @@ Berikut adalah beberapa layar utama yang tersedia di aplikasi mobile:
 | Laravel Sanctum | ^4.0 | Authentication SPA |
 | MySQL | 8.0 | Database |
 | Docker | latest | Containerization |
-| n8n | latest | Workflow automation |
+| Mailtrap | - | Email testing service |
 
 #### Mobile
 | Teknologi | Versi | Keterangan |
@@ -211,12 +217,15 @@ Berikut adalah beberapa layar utama yang tersedia di aplikasi mobile:
 | Dart | SDK | Bahasa pemrograman |
 | Riverpod | ^2.6.1 | State management |
 | Dio | ^5.8.0 | HTTP client |
+| Flutter Map | ^8.3.1 | Map widget untuk OpenStreetMap |
+| Latlong2 | ^0.10.1 | Geospatial coordinates |
 
-#### Frontend Web (opsional)
-| Teknologi | Keterangan |
-|-----------|------------|
-| HTML/CSS | Static website |
-| JavaScript | Landing page |
+#### Services Eksternal
+| Service | Keterangan |
+|---------|------------|
+| Midtrans | Payment gateway untuk QRIS |
+| Mailtrap | Email notification service |
+| Gemini API | Chatbot AI service |
 
 ### Struktur Folder
 
@@ -226,31 +235,35 @@ PM_UAS_rekayasa_Sistem_Informasi/
 │   ├── app/
 │   │   ├── Http/Controllers/Api/ # API Controllers
 │   │   ├── Models/               # Eloquent Models
-│   │   ├── Services/               # Business logic services
+│   │   ├── Services/             # Business logic services
+│   │   ├── Mail/                 # Email templates
 │   │   └── ...
 │   ├── database/
-│   │   ├── migrations/           # Database migrations
-│   │   ├── seeders/              # Database seeders
+│   │   ├── migrations/         # Database migrations
+│   │   ├── seeders/            # Database seeders
 │   │   └── ...
 │   ├── routes/
-│   │   └── api.php               # API routes
+│   │   └── api.php             # API routes
 │   ├── tests/
-│   │   └── Feature/              # Feature tests
+│   │   └── Feature/            # Feature tests
 │   ├── Dockerfile
 │   └── composer.json
 ├── mobile/                       # Flutter application
 │   ├── lib/
-│   │   ├── features/             # Feature modules
-│   │   ├── core/                 # Shared components
-│   │   ├── app/                  # App configuration
+│   │   ├── features/           # Feature modules
+│   │   │   ├── maps/           # Map features (OpenStreetMap)
+│   │   │   ├── chat/           # Chatbot features
+│   │   │   └── ...
+│   │   ├── core/               # Shared components
+│   │   ├── app/                # App configuration
 │   │   └── main.dart
 │   ├── pubspec.yaml
 │   └── analysis_options.yaml
 ├── docs/                         # Dokumentasi
 │   ├── srs/                      # Software Requirements Specification
-│   ├── api/                      # API documentation
-│   ├── testing/                  # Test documentation
-│   └── ...
+│   ├── api/                        # API documentation
+│   ├── testing/                    # Test documentation
+│   └── view-website/               # Website screenshots
 ├── website/                      # Landing page statis
 ├── scripts/                      # Utility scripts
 ├── postman/                      # Postman collections
@@ -270,10 +283,6 @@ services:
   db:           # MySQL Database (port 3306)
     image: mysql:8.0
     ports: ["3306:3306"]
-    
-  n8n:          # Workflow Automation (port 5678)
-    image: docker.n8n.io/n8nio/n8n
-    ports: ["5678:5678"]
 ```
 
 ---
@@ -391,12 +400,16 @@ flutter build ios --release
 | `DB_DATABASE` | Database name | db_tukangdekat |
 | `DB_USERNAME` | Database user | root |
 | `DB_PASSWORD` | Database password | rahasia |
-| `PAYMENT_GATEWAY_DRIVER` | Payment driver | xendit/midtrans |
+| `PAYMENT_GATEWAY_DRIVER` | Payment driver | midtrans |
 | `MIDTRANS_SERVER_KEY` | Midtrans server key | Mid-server-xxx |
 | `MIDTRANS_CLIENT_KEY` | Midtrans client key | Mid-client-xxx |
 | `MIDTRANS_IS_PRODUCTION` | Production mode | false |
-| `XENDIT_API_KEY` | Xendit API key | xnd_development_xxx |
-| `N8N_WEBHOOK_URL` | n8n webhook URL | http://host.docker.internal:5678/webhook-test |
+| `MAIL_MAILER` | Email driver | smtp |
+| `MAIL_HOST` | Mailtrap host | sandbox.smtp.mailtrap.io |
+| `MAIL_PORT` | Mailtrap port | 2525 |
+| `MAIL_USERNAME` | Mailtrap username | xxx |
+| `MAIL_PASSWORD` | Mailtrap password | xxx |
+| `GEMINI_API_KEY` | Gemini API Key untuk chatbot | AIxxx |
 
 #### Mobile (.env)
 
@@ -446,7 +459,7 @@ flutter build ios --release
    - Setelah pekerjaan selesai, terima pesanan
    - Provider mengajukan harga final (jika ada tambahan biaya)
    - Setujui harga final
-   - Lakukan pembayaran pelunasan via QRIS
+   - Lakukan pembayaran pelunasan via QRIS (Midtrans)
    - Berikan rating dan ulasan
 
 ### Untuk Provider (Tukang/Teknisi)
@@ -459,7 +472,7 @@ flutter build ios --release
 
 2. **Verifikasi Akun**
    - Tunggu admin memverifikasi akun
-   - Cek email untuk notifikasi verifikasi
+   - **Cek email (Mailtrap)** untuk notifikasi verifikasi dari admin
 
 3. **Kelola Layanan**
    - Tambah layanan yang disediakan
@@ -475,7 +488,7 @@ flutter build ios --release
    - Lihat riwayat pembayaran
    - Pantau fee yang diterima
 
-### Untuk Admin
+### Untuk Admin + Treasurer
 
 1. **Login sebagai Admin**
    - Gunakan akun admin@example.com / password
@@ -484,6 +497,7 @@ flutter build ios --release
    - Buka menu "Providers" → "Pending"
    - Review data provider
    - Approve atau Reject registrasi
+   - Sistem akan mengirim notifikasi via **Mailtrap** ke provider yang diverifikasi
 
 3. **Kelola Kategori**
    - Tambah/edit/hapus kategori layanan
@@ -494,10 +508,7 @@ flutter build ios --release
    - Pantau status pembayaran
    - Generate laporan keuangan
 
-### Untuk Treasurer (Bendahara)
-
-1. **Login sebagai Treasurer**
-2. **Monitor Pembayaran**
+5. **Monitor Pembayaran**
    - Lihat semua transaksi pembayaran
    - Generate laporan keuangan
    - Rekapitulasi fee platform
@@ -518,7 +529,7 @@ Setelah menjalankan seeder, berikut beberapa akun test yang tersedia:
 | Provider | budi.plumbing@example.com | password123 | Teknisi Plumbing |
 | Provider | citra.ac@example.com | password123 | Servis AC |
 
-> **Catatan:** Akun provider awalnya memiliki status `pending` dan perlu diverifikasi oleh admin.
+> **Catatan:** Akun provider awalnya memiliki status `pending` dan perlu diverifikasi oleh admin. Notifikasi verifikasi akan dikirim via Mailtrap.
 
 ---
 
@@ -575,14 +586,14 @@ http://localhost:8000/api
 |--------|----------|------|-----------|
 | GET | `/payments/order/{orderId}` | Customer/Provider | Daftar pembayaran |
 | GET | `/payments/{id}` | Customer/Provider | Detail pembayaran |
-| POST | `/payments/{id}/generate-qris` | Customer | Generate QRIS |
+| POST | `/payments/{id}/generate-qris` | Customer | Generate QRIS (Midtrans) |
 | POST | `/payments/{id}/confirm` | Customer | Konfirmasi pembayaran |
 | POST | `/payments/{id}/capture-qris` | Customer | Capture QRIS image |
 
 #### Chatbot
 | Method | Endpoint | Role | Deskripsi |
 |--------|----------|------|-----------|
-| POST | `/chatbot/send` | Semua | Kirim pesan ke chatbot |
+| POST | `/chatbot/send` | Semua | Kirim pesan ke chatbot (Gemini AI) |
 
 #### Admin
 | Method | Endpoint | Role | Deskripsi |
@@ -608,7 +619,7 @@ http://localhost:8000/api
 
 | Endpoint | Deskripsi |
 |----------|-----------|
-| POST `/webhooks/payment` | Webhook untuk notifikasi pembayaran (Midtrans/Xendit) |
+| POST `/webhooks/payment` | Webhook untuk notifikasi pembayaran (Midtrans) |
 | GET `/health` | Health check endpoint |
 | GET `/metrics` | Metrics untuk monitoring |
 
@@ -654,6 +665,23 @@ docker compose exec backend chmod -R 775 storage bootstrap/cache
 # Untuk device fisik, gunakan IP komputer Anda
 ```
 
+#### 6. Masalah Mailtrap Email
+```bash
+# Pastikan konfigurasi Mailtrap di .env benar:
+MAIL_MAILER=smtp
+MAIL_HOST=sandbox.smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=your_mailtrap_username
+MAIL_PASSWORD=your_mailtrap_password
+```
+
+#### 7. Masalah Gemini API Chatbot
+```bash
+# Pastikan GEMINI_API_KEY sudah diset di .env
+# API Key dapat didapatkan dari https://ai.google.dev/
+GEMINI_API_KEY=your_gemini_api_key
+```
+
 ### Perintah Bermanfaat
 
 ```bash
@@ -688,12 +716,14 @@ docker compose exec backend php artisan config:clear
 - [x] Autentikasi role-based
 - [x] Catalog layanan & pencarian provider
 - [x] Order lifecycle lengkap
-- [x] Pembayaran DP & pelunasan via QRIS
+- [x] Pembayaran DP & pelunasan via QRIS (Midtrans)
 - [x] Webhook payment gateway
 - [x] Rating & review
 - [x] Admin dashboard
 - [x] Treasurer monitoring
-- [x] Chatbot integrasi Gemini
+- [x] Chatbot integrasi Gemini AI
+- [x] Notifikasi email via Mailtrap
+- [x] Maps dengan OpenStreetMap
 
 ### Fase Selanjutnya (v1.1+)
 - [ ] Pengujian Manual E2E pada aplikasi mobile
@@ -701,7 +731,6 @@ docker compose exec backend php artisan config:clear
 - [ ] Deployment ke staging dan produksi
 - [ ] Implementasi push notification
 - [ ] Fitur live chat real-time
-- [ ] Integrasi Google Maps untuk tracking lokasi
 - [ ] Multi-language support
 - [ ] PWA support untuk web
 
@@ -709,7 +738,7 @@ docker compose exec backend php artisan config:clear
 
 ## 📄 Lisensi
 
-Proyek ini dikembangkan untuk keperluan akademik (Ujian Tugas Akhir/Sidang) Program Studi Sistem Informasi, Universitas Kebangsaan Republik Indonesia.
+Proyek ini dikembangkan untuk keperluan akademik (Ujian Akhir Semester) Program Studi Sistem Informasi, Universitas Kebangsaan Republik Indonesia.
 
 ---
 
