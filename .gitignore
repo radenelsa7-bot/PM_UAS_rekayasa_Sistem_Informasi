@@ -1,1 +1,88 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.*
+!.env.example
 mobile/.env
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/.env.testing
+
+# Build artifacts
+/build/
+/dist/
+/node_modules/
+/vendor/
+.metadata
+
+# Logs
+*.log
+*.swp
+*.swo
+
+# Docker
+docker-compose.yml
+
+# Flutter
+.metadata
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.pub-cache/
+mobile/.packages
+mobile/pubspec.lock
+
+# IDE
+.idea/
+.vscode/
+
+# SCM/Generators
+.dart_tool/
+.packages
+*.iml
+*.ipr
+*.iws
+
+# Field docs / templates
+docs/dokumentasi-lapangan/TEMPLATE_SURVEY.md
+docs/notulen/TEMPLATE_NOTULEN.md
+docs/database/README.md
+docs/diagrams/README.md
+
+# Backend docs
+backend/docs/admin_treasurer_endpoints.md
+backend/docs/MONITORING_RUNBOOK.md
+backend/docs/TESTING_RUNBOOK.md
+backend/docs/n8n/N8N_Tutorial.md
+
+# Staging artifacts / debug
+backend/storage/debug_*.json
+backend/storage/gateway_debug_*.txt
+
+# E2E secrets
+backend/e2e/.env
+
+# Docs duplicates
+Finalisasi-Project/assets/landing.css
+Finalisasi-Project/assets/landing.js
+
+# Postman templates
+postman/collections/New Collection
+postman/environments/New Environment.environment.yaml
+postman/globals/workspace.globals.yaml

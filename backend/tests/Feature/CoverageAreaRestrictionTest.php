@@ -39,9 +39,7 @@ class CoverageAreaRestrictionTest extends TestCase
             'status' => 'ACTIVE',
         ]);
 
-        // Test suite saat ini memakai sqlite in-memory dan tidak menjamin tabel wilayah ikut terbentuk.
-        // Selain itu, model/coverage factory belum konsisten di repo. Maka skip sampai penataan coverage coverage factory selesai.
-        $this->markTestSkipped('CoverageAreaRestrictionTest belum bisa distabilkan karena kebutuhan factory/tabel wilayah belum konsisten pada sqlite in-memory.');
+        // Test telah diaktifkan kembali setelah penambahan factory WilayahKota dan WilayahKecamatan
 
 
         $kota1 = \App\Models\WilayahKota::create([

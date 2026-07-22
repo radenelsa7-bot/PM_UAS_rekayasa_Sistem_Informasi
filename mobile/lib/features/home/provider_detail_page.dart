@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth/auth_controller.dart';
-import '../../shared/widgets/location_map_preview.dart';
+import '../../shared/widgets/osm_map_preview.dart';
 import 'catalog_providers.dart';
 import 'create_order_page.dart';
 
@@ -255,7 +255,7 @@ class ProviderDetailPage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                 ],
-                LocationMapPreview(
+                OsmMapPreview(
                   providerLatitude: provider.latitude,
                   providerLongitude: provider.longitude,
                   providerLabel: provider.businessName,

@@ -45,6 +45,8 @@ class AuthApiTest extends TestCase
     {
         // RegisterRequest requires category_id + business_name when role=PROVIDER
         $category = ServiceCategory::factory()->create();
+        $city = \App\Models\WilayahKota::factory()->create();
+        $district = \App\Models\WilayahKecamatan::factory()->create(['kota_id' => $city->id]);
 
         $response = $this->postJson('/api/auth/register', [
             'name' => 'Test Provider',
@@ -57,6 +59,8 @@ class AuthApiTest extends TestCase
             'business_name' => 'PT Test Provider',
             'service_name' => 'Layanan Test',
             'base_price' => 10000,
+            'city_id' => $city->id,
+            'district_id' => $district->id,
         ]);
 
         $response->assertStatus(201)

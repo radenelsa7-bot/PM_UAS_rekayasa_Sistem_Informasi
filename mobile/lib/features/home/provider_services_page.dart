@@ -8,8 +8,8 @@ import '../../core/models/provider_model.dart';
 import '../../core/services/api_service.dart';
 import '../../shared/widgets/app_text_field.dart';
 import 'catalog_providers.dart';
-import '../maps/location_picker_screen.dart'
-    show LocationPickerScreen, LocationResult;
+import '../maps/osm_location_picker_screen.dart'
+    show OsmLocationPickerScreen, LocationResult;
 
 final providerServicesControllerProvider =
     StateNotifierProvider<ProviderServicesController, ProviderServicesState>((ref) {
@@ -507,7 +507,7 @@ class _ProviderServicesPageState extends ConsumerState<ProviderServicesPage> {
  
     final result = await Navigator.of(context).push<LocationResult>(
       MaterialPageRoute(
-        builder: (_) => LocationPickerScreen(
+        builder: (_) => OsmLocationPickerScreen(
           initialLat: profile.latitude,
           initialLng: profile.longitude,
           initialAddress: profile.address,

@@ -15,8 +15,7 @@ import '../../core/models/order_model.dart';
 import '../../core/models/provider_model.dart';
 import '../../app/theme/app_theme.dart';
 import '../auth/auth_controller.dart';
-import '../maps/location_picker_screen.dart' show LocationPickerScreen, LocationResult;
-import '../maps/location_address_helper.dart';
+import '../maps/osm_location_picker_screen.dart' show OsmLocationPickerScreen, LocationResult;
 
 import 'home_page.dart';
 import 'order_providers.dart';
@@ -734,17 +733,14 @@ const SizedBox(height: 10),
 
                         final result = await Navigator.of(context).push<LocationResult>(
                           MaterialPageRoute(
-                            builder: (_) => const LocationPickerScreen(),
+                            builder: (_) => const OsmLocationPickerScreen(),
                           ),
                         );
                         if (result != null && mounted) {
                           setState(() {
                             _addressCtrl.text = result.address.isNotEmpty
                                 ? result.address
-                                : buildReadableLocationAddress(
-                                    lat: result.latitude,
-                                    lng: result.longitude,
-                                  );
+                                : '${result.latitude.toStringAsFixed(6)}, ${result.longitude.toStringAsFixed(6)}';
                             _pickedLatitude = result.latitude;
                             _pickedLongitude = result.longitude;
                           });

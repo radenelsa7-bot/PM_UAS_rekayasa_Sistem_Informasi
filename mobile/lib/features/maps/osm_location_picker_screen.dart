@@ -8,7 +8,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/theme/app_theme.dart';
 import '../../shared/widgets/app_button.dart';
-import 'location_address_helper.dart';
 
 class LocationResult {
   final double latitude;
@@ -167,16 +166,13 @@ class _OsmLocationPickerScreenState extends ConsumerState<OsmLocationPickerScree
       );
       final data = response.data;
       final display = data is Map ? data['display_name']?.toString() : null;
+      final resolved = display != null && display.isNotEmpty
+          ? display
+          : 'Lat: ${lat.toStringAsFixed(6)}, Lng: ${lng.toStringAsFixed(6)}';
       if (!mounted) return;
       setState(() {
-        final resolvedAddress = buildReadableLocationAddress(
-          lat: lat,
-          lng: lng,
-          geocodingData: data is Map ? Map<String, dynamic>.from(data) : null,
-          displayName: display,
-        );
-        _address = resolvedAddress;
-        _addressController.text = resolvedAddress;
+        _address = resolved;
+        _addressController.text = resolved;
         _isResolvingAddress = false;
       });
     } catch (_) {
